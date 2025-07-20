@@ -348,33 +348,40 @@ export default function Step4Male() {
         </div>
 
         {/* Exclusive Discount */}
-        <div className="bg-gradient-to-b from-green-600 to-green-800 text-white rounded-lg p-6 text-center">
-          <h2 className="text-2xl font-bold mb-2">EXCLUSIVE DISCOUNT</h2>
-          <div className="text-4xl font-bold mb-4">$47</div>
+<div className="bg-[#0A3622] text-white rounded-lg p-6">
+  {/* Título e preços centralizados */}
+  <h2 className="text-2xl font-bold text-center">EXCLUSIVE DISCOUNT</h2>
+  <div className="text-xl text-red-400 line-through text-center my-2">$197</div>
+  <div className="text-4xl font-bold mb-4 text-center">$47</div>
 
-          <div className="space-y-2 text-sm mb-6">
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>This person recently communicated whith 3 people from (IP)</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>Our AI detected a suspicious message</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>It was detected that this person archived 2 conversations yesterday</span>
-            </div>
-          </div>
+  <div className="space-y-2 text-sm mb-6 text-left">
 
-          <Button className="w-full bg-green-400 hover:bg-green-300 text-green-900 font-bold py-3 text-lg rounded-full">
-            BUY NOW →
-          </Button>
-        </div>
+    {/* Aumentei o tamanho do ícone para h-8 w-8 e o espaçamento para gap-4 */}
+    <div className="flex items-center gap-4">
+      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+      <span>This person recently communicated whith 3 people from (IP)</span>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+      <span>Our AI detected a suspicious message</span>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+      <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+      <span>It was detected that this person archived 2 conversations yesterday</span>
+    </div>
+  </div>
+
+  <Button className="w-full bg-green-400 hover:bg-green-300 text-green-900 font-bold py-3 text-lg rounded-full">
+    BUY NOW →
+  </Button>
+</div>
 
         {/* 30 Days Guarantee */}
         <div className="text-center py-8">
