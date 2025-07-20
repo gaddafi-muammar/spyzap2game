@@ -2,9 +2,48 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, X, Lock, CheckCheck } from "lucide-react"
+import { X, Lock, CheckCheck, MapPin, AlertTriangle } from "lucide-react" // Adicionei MapPin e AlertTriangle para o mapa
 import Image from "next/image"
-import StaticLocationMap from "@/components/StaticLocationMap"
+
+// Componente do mapa que criamos anteriormente
+const RealtimeMap = () => {
+  const lat = 39.8222
+  const lng = -7.4909
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=13&output=embed`
+
+  return (
+    <div className="relative h-96 w-full rounded-lg overflow-hidden shadow-inner">
+      <iframe
+        className="absolute top-0 left-0 w-full h-full border-0"
+        loading="lazy"
+        allowFullScreen
+        src={mapEmbedUrl}
+      ></iframe>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+      <div className="absolute inset-0 p-4 flex flex-col justify-between">
+        <div className="flex justify-between items-start">
+          <span className="bg-gray-800/80 text-white text-xs font-bold py-1 px-3 rounded">GPS TRACKING</span>
+          <span className="bg-red-600 text-white text-xs font-bold py-1 px-3 rounded">LIVE</span>
+        </div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute h-20 w-20 rounded-full bg-red-600/30 animate-ping"></div>
+          <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-red-600 border-2 border-white shadow-xl">
+            <MapPin className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        <div className="text-white">
+          <div className="flex items-center gap-2 font-bold text-red-400">
+            <AlertTriangle className="h-5 w-5" />
+            <span>SUSPICIOUS ACTIVITY DETECTED</span>
+          </div>
+          <p className="text-sm text-gray-200">Location: Castelo Branco, Portugal</p>
+          <p className="text-sm text-gray-200">Coordinates: 39.8164, -7.5039</p>
+          <p className="text-xs text-gray-300">Device was tracked to this area</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // Define the shape of a single message
 type Message = {
@@ -42,14 +81,12 @@ const ChatPopup = ({
               src={
                 profilePhoto ||
                 "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=" ||
-                "/placeholder.svg" ||
-                "/placeholder.svg" ||
                 "/placeholder.svg"
               }
               alt="Profile"
               width={40}
               height={40}
-              className="object-cover h-full w-full filter blur-sm"
+              className="object-cover h-full w-full" // Removi o blur para a foto do popup
               unoptimized
             />
           </div>
@@ -128,10 +165,8 @@ export default function Step4Male() {
         { type: "incoming", content: "Hi, how are you?", time: "2:38 PM" },
         { type: "outgoing", content: "I'm good, and you?", time: "2:40 PM" },
         { type: "incoming", content: "Blocked content", time: "2:43 PM", isBlocked: true },
-        { type: "outgoing", content: "Blocked content", time: "2:47 PM", isBlocked: true },
-        { type: "incoming", content: "Blocked content", time: "2:49 PM", isBlocked: true },
-        { type: "outgoing", content: "Blocked content", time: "2:49 PM", isBlocked: true },
-        { type: "incoming", content: "Blocked content", time: "2:52 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "2:43 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "2:45 PM", isBlocked: true },
       ] as Message[],
     },
     {
@@ -141,13 +176,12 @@ export default function Step4Male() {
       time: "2 days ago",
       popupName: "Blocked",
       chatData: [
-        { type: "incoming", content: "Hey handsome", time: "2:38 PM" },
-        { type: "outgoing", content: "I'm here, my love", time: "2:40 PM" },
-        { type: "incoming", content: "Blocked content", time: "2:43 PM", isBlocked: true },
-        { type: "outgoing", content: "Blocked content", time: "2:47 PM", isBlocked: true },
-        { type: "incoming", content: "Blocked content", time: "2:49 PM", isBlocked: true },
-        { type: "outgoing", content: "Blocked content", time: "2:49 PM", isBlocked: true },
-        { type: "incoming", content: "Blocked content", time: "2:52 PM", isBlocked: true },
+        { type: "incoming", content: "Hey handsome", time: "10:21 PM" },
+        { type: "outgoing", content: "I'm here, my love", time: "10:27 PM" },
+        { type: "incoming", content: "Blocked content", time: "10:29 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "10:34 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "10:35 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "10:36 PM", isBlocked: true },
       ] as Message[],
     },
     {
@@ -160,7 +194,7 @@ export default function Step4Male() {
         { type: "incoming", content: "Hi, how have you been?", time: "11:45 AM" },
         { type: "outgoing", content: "I'm fine, thanks! What about you?", time: "11:47 AM" },
         { type: "incoming", content: "Blocked content", time: "11:50 AM", isBlocked: true },
-        { type: "outgoing", content: "Blocked content", time: "11:53 AM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "11:51 AM", isBlocked: true },
       ] as Message[],
     },
   ]
@@ -297,15 +331,14 @@ export default function Step4Male() {
           </div>
         </div>
 
-        {/* Suspicious Location with Static Map */}
+        {/* Suspicious Location with Real Map */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-4 h-4 bg-green-500 rounded-full"></div>
             <h2 className="text-lg font-semibold text-gray-800">Suspicious Location</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">The device location was tracked. Check below:</p>
-
-          <StaticLocationMap />
+          <RealtimeMap />
         </div>
 
         {/* Phone Display */}
@@ -325,77 +358,64 @@ export default function Step4Male() {
 
           <div className="space-y-4 text-sm text-gray-600">
             <p>
-              <strong>You have reached the end of your free consultation. I know you're tired of guessing and
-              want some real answers.</strong>
+              <strong>
+                You have reached the end of your free consultation. I know you're tired of guessing and want some real
+                answers.
+              </strong>
             </p>
             <p>
-              Our satellite tracking system is the most advanced technology to find out what’s going on. But there’s a catch: keeping the satellites and servers running 24/7 is expensive.
+              Our satellite tracking system is the most advanced technology to find out what’s going on. But there’s a
+              catch: keeping the satellites and servers running 24/7 is expensive.
             </p>
-            <p>
-              That’s why, unfortunately, we can’t provide more than 5% of the information we uncover for free.
-            </p>
+            <p>That’s why, unfortunately, we can’t provide more than 5% of the information we uncover for free.</p>
             <p>The good news? You don’t have to spend a fortune to hire a private investigator.</p>
             <p>
-              We’ve developed an app that puts that same technology in your hands and lets you track everything discreetly and efficiently on your own.
+              We’ve developed an app that puts that same technology in your hands and lets you track everything
+              discreetly and efficiently on your own.
             </p>
             <p>
-              And the best part? The costs are a fraction of what you’d pay for an investigator – just enough to keep our satellites and system running.
+              And the best part? The costs are a fraction of what you’d pay for an investigator – just enough to keep
+              our satellites and system running.
             </p>
             <p>
-              It’s time to stop guessing and find out the truth. The answers are waiting for you. Click now and get instant access – before it’s too late!
+              It’s time to stop guessing and find out the truth. The answers are waiting for you. Click now and get
+              instant access – before it’s too late!
             </p>
           </div>
         </div>
 
         {/* Exclusive Discount */}
-<div className="bg-[#0A3622] text-white rounded-lg p-6">
-  {/* Título e preços centralizados */}
-  <h2 className="text-2xl font-bold text-center">EXCLUSIVE DISCOUNT</h2>
-  <div className="text-xl text-red-400 line-through text-center my-2">$197</div>
-  <div className="text-4xl font-bold mb-4 text-center">$47</div>
+        <div className="bg-[#0A3622] text-white rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-center">EXCLUSIVE DISCOUNT</h2>
+          <div className="text-xl text-red-400 line-through text-center my-2">$197</div>
+          <div className="text-4xl font-bold mb-4 text-center">$47</div>
 
-  <div className="space-y-2 text-sm mb-6 text-left">
-
-    {/* Aumentei o tamanho do ícone para h-8 w-8 e o espaçamento para gap-4 */}
-    <div className="flex items-center gap-4">
-      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-      <span>This person recently communicated whith 3 people from (IP)</span>
-    </div>
-
-    <div className="flex items-center gap-4">
-      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-      <span>Our AI detected a suspicious message</span>
-    </div>
-
-    <div className="flex items-center gap-4">
-      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-      <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
-    </div>
-
-    <div className="flex items-center gap-4">
-      <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-      <span>It was detected that this person archived 2 conversations yesterday</span>
-    </div>
-  </div>
-
-  <Button className="w-full bg-green-400 hover:bg-green-300 text-green-900 font-bold py-3 text-lg rounded-full">
-    BUY NOW →
-  </Button>
-</div>
+          <div className="space-y-2 text-sm mb-6 text-left">
+            <div className="flex items-center gap-4">
+              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+              <span>This person recently communicated whith 3 people from (IP)</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+              <span>Our AI detected a suspicious message</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+              <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
+              <span>It was detected that this person archived 2 conversations yesterday</span>
+            </div>
+          </div>
+          <Button className="w-full rounded-full bg-[#26d366] py-3 text-lg font-bold text-white shadow-[0_4px_12px_rgba(38,211,102,0.3)] transition duration-150 ease-in-out hover:bg-[#22b858] hover:shadow-lg">
+            BUY NOW →
+          </Button>
+        </div>
 
         {/* 30 Days Guarantee */}
         <div className="text-center py-8">
-          <div className="inline-block relative">
-            <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center border-4 border-yellow-500">
-              <div className="text-center">
-                <div className="text-xs font-bold text-red-600">30 DAYS</div>
-                <div className="text-xs font-bold text-red-600">GUARANTEE</div>
-              </div>
-            </div>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-3 py-1 text-xs font-bold rounded">
-              GUARANTEE
-            </div>
-          </div>
+          <img src="/images/30en.png" alt="Selo de 30 dias de garantia" className="w-64 h-64 block mx-auto" />
         </div>
       </div>
 
@@ -403,7 +423,8 @@ export default function Step4Male() {
       {selectedConvoIndex !== null && (
         <ChatPopup
           onClose={() => setSelectedConvoIndex(null)}
-          profilePhoto={profilePhoto}
+          // --- CORREÇÃO APLICADA AQUI ---
+          profilePhoto={conversations[selectedConvoIndex].img}
           conversationData={conversations[selectedConvoIndex].chatData}
           conversationName={conversations[selectedConvoIndex].popupName}
         />
