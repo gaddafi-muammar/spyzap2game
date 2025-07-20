@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Phone, X, Lock, CheckCheck } from "lucide-react"
+import { CheckCircle, X, Lock, CheckCheck } from "lucide-react"
 import Image from "next/image"
 import StaticLocationMap from "@/components/StaticLocationMap"
 
@@ -42,6 +42,7 @@ const ChatPopup = ({
               src={
                 profilePhoto ||
                 "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=" ||
+                "/placeholder.svg" ||
                 "/placeholder.svg" ||
                 "/placeholder.svg"
               }
@@ -214,7 +215,7 @@ export default function Step4Male() {
             <span className="font-semibold text-orange-500">deleted messages</span> and some were classified as critical
             based on the content.
           </p>
-          <p className="text-xs text-gray-500 mb-4">See the conversations in your Report</p>
+          <p className="text-xs text-gray-500 mb-4">Tap a conversation below to view details.</p>
 
           <div className="space-y-3">
             {conversations.map((convo, index) => (
@@ -311,35 +312,37 @@ export default function Step4Male() {
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <Phone className="h-32 w-20 text-gray-400" />
+              <Image
+                src="/images/celulares.webp"
+                alt="Phone"
+                width={300}
+                height={300}
+                className="object-contain"
+                unoptimized
+              />
             </div>
           </div>
 
           <div className="space-y-4 text-sm text-gray-600">
             <p>
-              <strong>You have reached the end of your free consultation.</strong> I know you're tired of guessing and
-              want some real answers.
+              <strong>You have reached the end of your free consultation. I know you're tired of guessing and
+              want some real answers.</strong>
             </p>
             <p>
-              Our satellite tracking system is the most advanced technology to find out what's going on. But there's a
-              catch: querying the satellites and servers running 24/7 is expensive.
+              Our satellite tracking system is the most advanced technology to find out what’s going on. But there’s a catch: keeping the satellites and servers running 24/7 is expensive.
             </p>
             <p>
-              That's why, unfortunately, we can't provide <strong>free</strong> full access to the information we
-              uncover for everyone.
+              That’s why, unfortunately, we can’t provide more than 5% of the information we uncover for free.
             </p>
-            <p>The good news? You don't have to spend a fortune to have a private investigator.</p>
+            <p>The good news? You don’t have to spend a fortune to hire a private investigator.</p>
             <p>
-              We've developed an app that puts that same technology in your hands and lets you track everything
-              discreetly and efficiently on your own device.
+              We’ve developed an app that puts that same technology in your hands and lets you track everything discreetly and efficiently on your own.
             </p>
             <p>
-              And the best part? The costs are a fraction of what you'd pay for an investigator - just enough to keep
-              our satellites and servers running.
+              And the best part? The costs are a fraction of what you’d pay for an investigator – just enough to keep our satellites and system running.
             </p>
             <p>
-              It's time to stop guessing and get the answers you deserve. You can try our{" "}
-              <strong>ONE full report service</strong> - before it's too late.
+              It’s time to stop guessing and find out the truth. The answers are waiting for you. Click now and get instant access – before it’s too late!
             </p>
           </div>
         </div>
@@ -352,7 +355,7 @@ export default function Step4Male() {
           <div className="space-y-2 text-sm mb-6">
             <div className="flex items-center justify-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              <span>This person's recently communicated details + private phone data</span>
+              <span>This person recently communicated whith 3 people from (IP)</span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <CheckCircle className="h-4 w-4" />
@@ -360,11 +363,11 @@ export default function Step4Male() {
             </div>
             <div className="flex items-center justify-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              <span>I was detected that this person cannot be trusted (TRUTH & dates today)</span>
+              <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              <span>I was detected that this person cannot be trusted (TRUTH & dates yesterday)</span>
+              <span>It was detected that this person archived 2 conversations yesterday</span>
             </div>
           </div>
 
