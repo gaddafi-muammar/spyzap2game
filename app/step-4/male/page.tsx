@@ -2,14 +2,109 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, MapPin, Phone } from "lucide-react"
+import { CheckCircle, MapPin, Phone, X, Lock, CheckCheck } from "lucide-react"
 import Image from "next/image"
+
+// Define the shape of a single message
+type Message = {
+  type: "incoming" | "outgoing"
+  content: string
+  time: string
+  isBlocked?: boolean
+}
+
+// 1. UPDATED: ChatPopup is now dynamic and accepts props for chat data and title
+const ChatPopup = ({
+  onClose,
+  profilePhoto,
+  conversationData,
+  conversationName,
+}: {
+  onClose: () => void
+  profilePhoto: string | null
+  conversationData: Message[]
+  conversationName: string
+}) => {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-teal-600 text-white p-3 flex items-center gap-3">
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-teal-700 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+            <Image
+              src={
+                profilePhoto ||
+                "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI="
+              }
+              alt="Profile"
+              width={40}
+              height={40}
+              className="object-cover h-full w-full filter blur-sm"
+              unoptimized
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {/* The name is now dynamic */}
+            <span className="font-semibold">{conversationName.replace("🔒", "").trim()}</span>
+            {/* Show lock icon if name includes it */}
+            {conversationName.includes("🔒") && <Lock className="h-4 w-4" />}
+          </div>
+        </div>
+
+        {/* Chat Body - Renders messages dynamically */}
+        <div className="bg-gray-200 p-4 space-y-4 h-[28rem] overflow-y-scroll">
+          {conversationData.map((msg, index) =>
+            msg.type === "incoming" ? (
+              // Incoming Message
+              <div key={index} className="flex justify-start">
+                <div className="bg-white rounded-lg p-3 max-w-[80%] shadow">
+                  <p className={`text-sm ${msg.isBlocked ? "font-semibold text-red-500" : "text-gray-800"}`}>
+                    {msg.content}
+                  </p>
+                  <p className="text-right text-xs text-gray-400 mt-1">{msg.time}</p>
+                </div>
+              </div>
+            ) : (
+              // Outgoing Message
+              <div key={index} className="flex justify-end">
+                <div className="bg-lime-200 rounded-lg p-3 max-w-[80%] shadow">
+                  <p className={`text-sm ${msg.isBlocked ? "font-semibold text-red-500" : "text-gray-800"}`}>
+                    {msg.content}
+                  </p>
+                  <div className="flex justify-end items-center mt-1">
+                    <span className="text-xs text-gray-500 mr-1">{msg.time}</span>
+                    <CheckCheck className="h-4 w-4 text-blue-500" />
+                  </div>
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+
+        {/* Unlock Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 text-center bg-gradient-to-t from-white via-white/95 to-transparent">
+          <p className="text-gray-700 font-medium">To view the full conversation, you need to unlock the chats.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Step4Male() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
+  // 2. UPDATED: State now tracks the *index* of the selected conversation, or null if none is open
+  const [selectedConvoIndex, setSelectedConvoIndex] = useState<number | null>(null)
 
   useEffect(() => {
-    // Get profile photo from localStorage (saved in step 2)
     const storedPhoto = localStorage.getItem("profilePhoto")
     setProfilePhoto(
       storedPhoto ||
@@ -24,6 +119,55 @@ export default function Step4Male() {
     "/images/male/5.png",
     "/images/male/9.png",
     "/images/male/4.png",
+  ]
+
+  // 3. UPDATED: Conversation data now includes the full chat history for each popup
+  const conversations = [
+    {
+      img: "/images/male/3.png",
+      name: "Blocked 🔒",
+      msg: "Recovered deleted message",
+      time: "Yesterday",
+      popupName: "Blocked 🔒",
+      chatData: [
+        { type: "incoming", content: "Hi, how are you?", time: "2:38 PM" },
+        { type: "outgoing", content: "I'm good, and you?", time: "2:40 PM" },
+        { type: "incoming", content: "Blocked content", time: "2:43 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "2:47 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "2:49 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "2:49 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "2:52 PM", isBlocked: true },
+      ] as Message[],
+    },
+    {
+      img: "/images/male/303.png",
+      name: "Blocked 🔒",
+      msg: "Suspicious audio detected",
+      time: "2 days ago",
+      popupName: "Blocked",
+      chatData: [
+        { type: "incoming", content: "Hey handsome", time: "2:38 PM" },
+        { type: "outgoing", content: "I'm here, my love", time: "2:40 PM" },
+        { type: "incoming", content: "Blocked content", time: "2:43 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "2:47 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "2:49 PM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "2:49 PM", isBlocked: true },
+        { type: "incoming", content: "Blocked content", time: "2:52 PM", isBlocked: true },
+      ] as Message[],
+    },
+    {
+      img: "/images/male/331.png",
+      name: "Blocked 🔒",
+      msg: "Suspicious photos found", // Message updated as per your request
+      time: "3 days ago",
+      popupName: "Blocked",
+      chatData: [
+        { type: "incoming", content: "Hi, how have you been?", time: "11:45 AM" },
+        { type: "outgoing", content: "I'm fine, thanks! What about you?", time: "11:47 AM" },
+        { type: "incoming", content: "Blocked content", time: "11:50 AM", isBlocked: true },
+        { type: "outgoing", content: "Blocked content", time: "11:53 AM", isBlocked: true },
+      ] as Message[],
+    },
   ]
 
   return (
@@ -70,38 +214,31 @@ export default function Step4Male() {
           <p className="text-xs text-gray-500 mb-4">See the conversations in your Report</p>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-400 rounded-full"></div>
-                <div>
-                  <p className="font-medium text-sm">Rachel B</p>
-                  <p className="text-xs text-gray-500">Good morning message</p>
+            {/* 4. UPDATED: onClick now sets the index of the clicked conversation */}
+            {conversations.map((convo, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSelectedConvoIndex(index)} // This opens the specific popup
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gray-300 rounded-full overflow-hidden">
+                    <Image
+                      src={convo.img}
+                      alt="Profile"
+                      width={32}
+                      height={32}
+                      className="object-cover h-full w-full"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{convo.name}</p>
+                    <p className="text-xs text-gray-500">{convo.msg}</p>
+                  </div>
                 </div>
+                <span className="text-xs text-gray-400">{convo.time}</span>
               </div>
-              <span className="text-xs text-gray-400">Yesterday</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-400 rounded-full"></div>
-                <div>
-                  <p className="font-medium text-sm">Rachel B</p>
-                  <p className="text-xs text-gray-500">Message deleted</p>
-                </div>
-              </div>
-              <span className="text-xs text-gray-400">2 days ago</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-pink-400 rounded-full"></div>
-                <div>
-                  <p className="font-medium text-sm">Rachel B</p>
-                  <p className="text-xs text-gray-500">Suspicious phone found</p>
-                </div>
-              </div>
-              <span className="text-xs text-gray-400">3 days ago</span>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -249,6 +386,16 @@ export default function Step4Male() {
           </div>
         </div>
       </div>
+
+      {/* 5. UPDATED: Conditionally render the popup, passing the correct data */}
+      {selectedConvoIndex !== null && (
+        <ChatPopup
+          onClose={() => setSelectedConvoIndex(null)}
+          profilePhoto={profilePhoto}
+          conversationData={conversations[selectedConvoIndex].chatData}
+          conversationName={conversations[selectedConvoIndex].popupName}
+        />
+      )}
     </div>
   )
 }
