@@ -163,7 +163,14 @@ export default function Step3() {
   }, [steps, currentSteps.length])
 
   const handleViewReport = () => {
-    router.push("/step-4") // Or your final step page
+    // Get selected gender from localStorage
+    const selectedGender = localStorage.getItem("selectedGender") || "male"
+
+    if (selectedGender === "female") {
+      router.push("/step-4/female")
+    } else {
+      router.push("/step-4/male")
+    }
   }
 
   return (

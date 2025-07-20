@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle, MapPin, Phone } from "lucide-react"
 import Image from "next/image"
 
-export default function Step4Female() {
+export default function Step4Male() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
 
   useEffect(() => {
@@ -17,20 +17,20 @@ export default function Step4Female() {
     )
   }, [])
 
-  const femaleImages = [
-    "/images/female/1-h.png",
-    "/images/female/2-h.png",
-    "/images/female/3-h.png",
-    "/images/female/4-h.png",
-    "/images/female/5-h.png",
-    "/images/female/6-h.png",
+  const maleImages = [
+    "/images/male/303.png",
+    "/images/male/7.png",
+    "/images/male/6.png",
+    "/images/male/5.png",
+    "/images/male/9.png",
+    "/images/male/4.png",
   ]
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-green-500 text-white text-center py-4">
-        <h1 className="text-xl font-bold">WhatsApp Access Report - Female Profile</h1>
+        <h1 className="text-xl font-bold">WhatsApp Access Report - Male Profile</h1>
         <p className="text-sm opacity-90">Check below the most relevant from the analysis of the personal mobile</p>
       </div>
 
@@ -63,7 +63,7 @@ export default function Step4Female() {
             <h2 className="text-lg font-semibold text-gray-800">Conversation Analysis</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            <span className="font-semibold">156 suspicious conversations</span> were found during the analysis. The
+            <span className="font-semibold">148 suspicious conversations</span> were found during the analysis. The
             system was able to recover <span className="font-semibold">deleted messages</span> and some were classified
             as critical based on the content.
           </p>
@@ -72,10 +72,10 @@ export default function Step4Female() {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-pink-400 rounded-full"></div>
+                <div className="w-8 h-8 bg-orange-400 rounded-full"></div>
                 <div>
-                  <p className="font-medium text-sm">Sarah M</p>
-                  <p className="text-xs text-gray-500">Late night message</p>
+                  <p className="font-medium text-sm">Rachel B</p>
+                  <p className="text-xs text-gray-500">Good morning message</p>
                 </div>
               </div>
               <span className="text-xs text-gray-400">Yesterday</span>
@@ -83,9 +83,9 @@ export default function Step4Female() {
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-400 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-400 rounded-full"></div>
                 <div>
-                  <p className="font-medium text-sm">Sarah M</p>
+                  <p className="font-medium text-sm">Rachel B</p>
                   <p className="text-xs text-gray-500">Message deleted</p>
                 </div>
               </div>
@@ -94,10 +94,10 @@ export default function Step4Female() {
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-red-400 rounded-full"></div>
+                <div className="w-8 h-8 bg-pink-400 rounded-full"></div>
                 <div>
-                  <p className="font-medium text-sm">Sarah M</p>
-                  <p className="text-xs text-gray-500">Suspicious contact found</p>
+                  <p className="font-medium text-sm">Rachel B</p>
+                  <p className="text-xs text-gray-500">Suspicious phone found</p>
                 </div>
               </div>
               <span className="text-xs text-gray-400">3 days ago</span>
@@ -112,13 +112,13 @@ export default function Step4Female() {
             <h2 className="text-lg font-semibold text-gray-800">Recovered Media</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            <span className="font-semibold">7 compromising audios</span> were recovered during the analysis.
-            Additionally, the system found <span className="font-semibold">189 deleted photos</span> that may contain
+            <span className="font-semibold">5 compromising audios</span> were recovered during the analysis.
+            Additionally, the system found <span className="font-semibold">247 deleted photos</span> that may contain
             sensitive content.
           </p>
 
           <div className="grid grid-cols-3 gap-3">
-            {femaleImages.map((image, index) => (
+            {maleImages.map((image, index) => (
               <div key={index} className="aspect-square relative rounded-lg overflow-hidden">
                 <Image
                   src={image || "/placeholder.svg"}
@@ -138,12 +138,12 @@ export default function Step4Female() {
             <h2 className="text-lg font-semibold text-gray-800">Suspicious Keywords</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            The system scanned <span className="font-semibold">3,892 messages</span> and identified several keywords
+            The system scanned <span className="font-semibold">4,327 messages</span> and identified several keywords
             that may indicate suspicious behavior.
           </p>
 
           <div className="space-y-2">
-            {["Maybe", "Secret", "Don't tell him", "Tonight", "Miss you"].map((keyword, index) => (
+            {["Yes!", "Love", "Secret", "Baby", "Don't tell"].map((keyword, index) => (
               <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm">{keyword}</span>
                 <CheckCircle className="h-4 w-4 text-green-500" />
