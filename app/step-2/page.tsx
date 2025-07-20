@@ -215,7 +215,7 @@ const countries = [
   { code: "+994", name: "Azerbaijan", flag: "🇦🇿", placeholder: "050 123 45 67" },
   { code: "+995", name: "Georgia", flag: "🇬🇪", placeholder: "555 12 34 56" },
   { code: "+996", name: "Kyrgyzstan", flag: "🇰🇬", placeholder: "0700 123 456" },
-  { code: "+998", name: "Uzbekistan", flag: "🇺🇿", placeholder: "90 123 45 67" }
+  { code: "+998", name: "Uzbekistan", flag: "🇺🇿", placeholder: "90 123 45 67" },
 ]
 
 export default function Step2() {
@@ -263,9 +263,7 @@ export default function Step2() {
       }
 
       if (!response.ok || !data?.success) {
-        setProfilePhoto(
-          "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
-        )
+        setProfilePhoto("/placeholder.svg")
         setIsPhotoPrivate(true)
         setPhotoError("Could not load photo.")
         return
@@ -275,9 +273,7 @@ export default function Step2() {
       setIsPhotoPrivate(!!data.is_photo_private)
     } catch (error) {
       console.error("Error fetching photo:", error)
-      setProfilePhoto(
-        "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
-      )
+      setProfilePhoto("/placeholder.svg")
       setIsPhotoPrivate(true)
       setPhotoError("Error loading photo.")
     } finally {
@@ -296,7 +292,7 @@ export default function Step2() {
     if (cleanPhone.length >= 11) {
       fetchWhatsAppPhoto(cleanPhone)
     } else {
-      setProfilePhoto(null)
+      setProfilePhoto("/placeholder.svg")
       setIsPhotoPrivate(false)
       setPhotoError("")
     }
@@ -317,11 +313,7 @@ export default function Step2() {
   const handleCloneWhatsApp = () => {
     const fullNumber = (selectedCountry.code + phoneNumber).replace(/[^0-9+]/g, "")
     if (fullNumber.length > 10) {
-      localStorage.setItem(
-        "profilePhoto",
-        profilePhoto ||
-          "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
-      )
+      localStorage.setItem("profilePhoto", profilePhoto || "/placeholder.svg")
       localStorage.setItem("phoneNumber", fullNumber)
       router.push("/step-3")
     } else {
@@ -375,6 +367,7 @@ export default function Step2() {
               height={128}
               className="object-cover h-full w-full"
               unoptimized
+              onError={() => setProfilePhoto("/placeholder.svg")}
             />
           ) : (
             <svg

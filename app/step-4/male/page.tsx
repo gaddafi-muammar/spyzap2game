@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, MapPin, Phone, X, Lock, CheckCheck } from "lucide-react"
+import { CheckCircle, Phone, X, Lock, CheckCheck } from "lucide-react"
 import Image from "next/image"
+import StaticLocationMap from "@/components/StaticLocationMap"
 
 // Define the shape of a single message
 type Message = {
@@ -13,7 +14,7 @@ type Message = {
   isBlocked?: boolean
 }
 
-// 1. UPDATED: ChatPopup is now dynamic and accepts props for chat data and title
+// ChatPopup component
 const ChatPopup = ({
   onClose,
   profilePhoto,
@@ -26,10 +27,7 @@ const ChatPopup = ({
   conversationName: string
 }) => {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={onClose}>
       <div
         className="relative bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -43,7 +41,9 @@ const ChatPopup = ({
             <Image
               src={
                 profilePhoto ||
-                "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI="
+                "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=" ||
+                "/placeholder.svg" ||
+                "/placeholder.svg"
               }
               alt="Profile"
               width={40}
@@ -53,18 +53,15 @@ const ChatPopup = ({
             />
           </div>
           <div className="flex items-center gap-2">
-            {/* The name is now dynamic */}
             <span className="font-semibold">{conversationName.replace("🔒", "").trim()}</span>
-            {/* Show lock icon if name includes it */}
             {conversationName.includes("🔒") && <Lock className="h-4 w-4" />}
           </div>
         </div>
 
-        {/* Chat Body - Renders messages dynamically */}
+        {/* Chat Body */}
         <div className="bg-gray-200 p-4 space-y-4 h-[28rem] overflow-y-scroll">
           {conversationData.map((msg, index) =>
             msg.type === "incoming" ? (
-              // Incoming Message
               <div key={index} className="flex justify-start">
                 <div className="bg-white rounded-lg p-3 max-w-[80%] shadow">
                   <p className={`text-sm ${msg.isBlocked ? "font-semibold text-red-500" : "text-gray-800"}`}>
@@ -74,7 +71,6 @@ const ChatPopup = ({
                 </div>
               </div>
             ) : (
-              // Outgoing Message
               <div key={index} className="flex justify-end">
                 <div className="bg-lime-200 rounded-lg p-3 max-w-[80%] shadow">
                   <p className={`text-sm ${msg.isBlocked ? "font-semibold text-red-500" : "text-gray-800"}`}>
@@ -101,7 +97,6 @@ const ChatPopup = ({
 
 export default function Step4Male() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
-  // 2. UPDATED: State now tracks the *index* of the selected conversation, or null if none is open
   const [selectedConvoIndex, setSelectedConvoIndex] = useState<number | null>(null)
 
   useEffect(() => {
@@ -113,15 +108,14 @@ export default function Step4Male() {
   }, [])
 
   const maleImages = [
-    "/images/male/303.png",
+    "/images/male/4.png",
     "/images/male/7.png",
     "/images/male/6.png",
     "/images/male/5.png",
     "/images/male/9.png",
-    "/images/male/4.png",
+    "/images/male/8.png",
   ]
 
-  // 3. UPDATED: Conversation data now includes the full chat history for each popup
   const conversations = [
     {
       img: "/images/male/3.png",
@@ -158,7 +152,7 @@ export default function Step4Male() {
     {
       img: "/images/male/331.png",
       name: "Blocked 🔒",
-      msg: "Suspicious photos found", // Message updated as per your request
+      msg: "Suspicious photos found",
       time: "3 days ago",
       popupName: "Blocked",
       chatData: [
@@ -168,6 +162,14 @@ export default function Step4Male() {
         { type: "outgoing", content: "Blocked content", time: "11:53 AM", isBlocked: true },
       ] as Message[],
     },
+  ]
+
+  const suspiciousKeywords = [
+    { word: "Naughty", count: 13 },
+    { word: "Love", count: 22 },
+    { word: "Secret", count: 7 },
+    { word: "Hidden", count: 11 },
+    { word: "Don't tell", count: 5 },
   ]
 
   return (
@@ -207,24 +209,24 @@ export default function Step4Male() {
             <h2 className="text-lg font-semibold text-gray-800">Conversation Analysis</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            <span className="font-semibold">148 suspicious conversations</span> were found during the analysis. The
-            system was able to recover <span className="font-semibold">deleted messages</span> and some were classified
-            as critical based on the content.
+            <span className="font-semibold text-red-500">148 suspicious conversations</span> were found during the
+            analysis. The system was able to recover{" "}
+            <span className="font-semibold text-orange-500">deleted messages</span> and some were classified as critical
+            based on the content.
           </p>
           <p className="text-xs text-gray-500 mb-4">See the conversations in your Report</p>
 
           <div className="space-y-3">
-            {/* 4. UPDATED: onClick now sets the index of the clicked conversation */}
             {conversations.map((convo, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => setSelectedConvoIndex(index)} // This opens the specific popup
+                onClick={() => setSelectedConvoIndex(index)}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-300 rounded-full overflow-hidden">
                     <Image
-                      src={convo.img}
+                      src={convo.img || "/placeholder.svg"}
                       alt="Profile"
                       width={32}
                       height={32}
@@ -249,9 +251,9 @@ export default function Step4Male() {
             <h2 className="text-lg font-semibold text-gray-800">Recovered Media</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            <span className="font-semibold">5 compromising audios</span> were recovered during the analysis.
-            Additionally, the system found <span className="font-semibold">247 deleted photos</span> that may contain
-            sensitive content.
+            <span className="font-semibold text-red-500">5 compromising audios</span> were recovered during the
+            analysis. Additionally, the system found{" "}
+            <span className="font-semibold text-red-500">247 deleted photos</span> that may contain sensitive content.
           </p>
 
           <div className="grid grid-cols-3 gap-3">
@@ -275,21 +277,26 @@ export default function Step4Male() {
             <h2 className="text-lg font-semibold text-gray-800">Suspicious Keywords</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            The system scanned <span className="font-semibold">4,327 messages</span> and identified several keywords
-            that may indicate suspicious behavior.
+            The system scanned <span className="font-semibold text-red-500">4,327 messages</span> and identified several
+            keywords that may indicate suspicious behavior.
           </p>
 
-          <div className="space-y-2">
-            {["Yes!", "Love", "Secret", "Baby", "Don't tell"].map((keyword, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm">{keyword}</span>
-                <CheckCircle className="h-4 w-4 text-green-500" />
+          <div className="space-y-1">
+            {suspiciousKeywords.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between py-3 border-b last:border-b-0 border-gray-200"
+              >
+                <span className="text-lg text-gray-800">"{item.word}"</span>
+                <div className="flex items-center justify-center w-7 h-7 bg-green-500 rounded-full text-white text-sm font-bold">
+                  {item.count}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Suspicious Location */}
+        {/* Suspicious Location with Static Map */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-4 h-4 bg-green-500 rounded-full"></div>
@@ -297,12 +304,7 @@ export default function Step4Male() {
           </div>
           <p className="text-sm text-gray-600 mb-4">The device location was tracked. Check below:</p>
 
-          <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500">Map showing location in Lisbon</p>
-            </div>
-          </div>
+          <StaticLocationMap />
         </div>
 
         {/* Phone Display */}
@@ -387,7 +389,7 @@ export default function Step4Male() {
         </div>
       </div>
 
-      {/* 5. UPDATED: Conditionally render the popup, passing the correct data */}
+      {/* Conditionally render the popup */}
       {selectedConvoIndex !== null && (
         <ChatPopup
           onClose={() => setSelectedConvoIndex(null)}
