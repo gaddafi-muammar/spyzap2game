@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
-  // JSON-default de retorno em caso de falha da API externa
   const fallbackPayload = {
     success: true,
     result:
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     if (!phone) {
       return NextResponse.json(
-        { success: false, error: "Número de telefone é obrigatório" },
+        { success: false, error: "Phone number is required" },
         {
           status: 400,
           headers: { "Access-Control-Allow-Origin": "*" },
@@ -22,21 +21,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // --- MODIFICATION START ---
-    // The old logic incorrectly assumed a number was from Brazil.
-    // This new logic just cleans the number provided by the frontend.
+    // --- THIS IS THE CRITICAL FIX ---
+    // Remove the old logic that incorrectly added "55".
+    // We now trust the frontend to send the full, correct number.
     const fullNumber = String(phone).replace(/[^0-9]/g, "")
 
     if (fullNumber.length < 10) {
       return NextResponse.json(
-        { success: false, error: "Número de telefone inválido ou muito curto" },
+        { success: false, error: "Invalid or too short phone number" },
         {
           status: 400,
           headers: { "Access-Control-Allow-Origin": "*" },
         },
       )
     }
-    // --- MODIFICATION END ---
+    // --- END OF FIX ---
 
     const response = await fetch(
       `https://primary-production-aac6.up.railway.app/webhook/request_photo?tel=${fullNumber}`,
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!response.ok) {
-      console.error("API externa retornou status:", response.status)
+      console.error("External API returned status:", response.status)
       return NextResponse.json(fallbackPayload, {
         status: 200,
         headers: { "Access-Control-Allow-Origin": "*" },
@@ -59,6 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
+
     const isPhotoPrivate = !data?.link || data.link.includes("no-user-image-icon")
 
     return NextResponse.json(
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       },
     )
   } catch (err) {
-    console.error("Erro no webhook WhatsApp:", err)
+    console.error("Error in WhatsApp webhook:", err)
     return NextResponse.json(fallbackPayload, {
       status: 200,
       headers: { "Access-Control-Allow-Origin": "*" },

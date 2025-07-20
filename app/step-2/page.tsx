@@ -215,7 +215,7 @@ const countries = [
   { code: "+994", name: "Azerbaijan", flag: "🇦🇿", placeholder: "050 123 45 67" },
   { code: "+995", name: "Georgia", flag: "🇬🇪", placeholder: "555 12 34 56" },
   { code: "+996", name: "Kyrgyzstan", flag: "🇰🇬", placeholder: "0700 123 456" },
-  { code: "+998", name: "Uzbekistan", flag: "🇺🇿", placeholder: "90 123 45 67" },
+  { code: "+998", name: "Uzbekistan", flag: "🇺🇿", placeholder: "90 123 45 67" }
 ]
 
 export default function Step2() {
@@ -388,72 +388,75 @@ export default function Step2() {
           )}
         </div>
 
-        <div className="text-center max-w-2xl mx-auto mb-8">
+        <div className="text-center w-full max-w-md mx-auto mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             Congratulations, you've earned
             <br />1 free access!
           </h1>
           <p className="text-lg text-gray-500 mb-8">Enter the number below and start silent monitoring.</p>
 
-          {/* --- NEW Phone Input with Searchable Country Selector --- */}
-          <div className="flex items-start max-w-md mx-auto mb-6 relative country-selector-container">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                className="flex items-center gap-2 pl-3 pr-2 py-3 bg-white border border-r-0 border-gray-300 rounded-l-lg h-12"
-              >
-                <span className="text-lg">{selectedCountry.flag}</span>
-                <span className="text-gray-600 font-medium">{selectedCountry.code}</span>
-              </button>
+          <div className="w-full mb-6 country-selector-container">
+            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm transition-all focus-within:ring-2 focus-within:ring-green-500">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                  className="flex items-center gap-2 h-12 px-3 bg-gray-50 hover:bg-gray-100 rounded-l-xl transition-colors"
+                >
+                  <span className="text-xl">{selectedCountry.flag}</span>
+                  <span className="text-gray-700 font-medium">{selectedCountry.code}</span>
+                </button>
 
-              {showCountryDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border rounded-xl shadow-lg z-50 w-80 max-h-72 overflow-y-auto">
-                  <div className="p-2 sticky top-0 bg-white">
-                    <Input
-                      type="text"
-                      placeholder="Search country or code..."
-                      value={countrySearch}
-                      onChange={(e) => setCountrySearch(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
-                    />
+                {showCountryDropdown && (
+                  <div className="absolute top-full left-0 mt-2 bg-white border rounded-xl shadow-lg z-50 w-80 max-h-72 overflow-y-auto">
+                    <div className="p-2 sticky top-0 bg-white border-b">
+                      <Input
+                        type="text"
+                        placeholder="Search country or code..."
+                        value={countrySearch}
+                        onChange={(e) => setCountrySearch(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                    </div>
+                    <ul className="py-1">
+                      {filteredCountries.length > 0 ? (
+                        filteredCountries.map((country) => (
+                          <li key={`${country.name}-${country.code}`}>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectCountry(country)}
+                              className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-sm"
+                            >
+                              <span className="text-xl">{country.flag}</span>
+                              <span className="text-gray-800 font-medium">{country.name}</span>
+                              <span className="text-gray-500 ml-auto">{country.code}</span>
+                            </button>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="px-3 py-2 text-sm text-gray-500 text-center">No countries found.</li>
+                      )}
+                    </ul>
                   </div>
-                  <ul className="py-1">
-                    {filteredCountries.length > 0 ? (
-                      filteredCountries.map((country) => (
-                        <li key={`${country.name}-${country.code}`}>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectCountry(country)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-sm"
-                          >
-                            <span className="text-lg">{country.flag}</span>
-                            <span className="text-gray-800 font-medium">{country.name}</span>
-                            <span className="text-gray-500 ml-auto">{country.code}</span>
-                          </button>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="px-3 py-2 text-sm text-gray-500 text-center">No countries found.</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <Input
-              type="tel"
-              placeholder={selectedCountry.placeholder || "Enter phone number"}
-              value={phoneNumber}
-              onChange={handlePhoneInputChange}
-              className="flex-1 h-12 border-l-0 rounded-l-none rounded-r-lg focus:ring-green-500 focus:border-green-500"
-            />
+              <div className="h-6 w-px bg-gray-200"></div>
+
+              <Input
+                type="tel"
+                placeholder={selectedCountry.placeholder || "Enter phone number"}
+                value={phoneNumber}
+                onChange={handlePhoneInputChange}
+                className="flex-1 h-12 border-none bg-transparent focus:ring-0"
+              />
+            </div>
           </div>
 
           <Button
             onClick={handleCloneWhatsApp}
             disabled={!phoneNumber.trim() || isLoadingPhoto}
-            className="w-full max-w-md h-14 bg-green-500 hover:bg-green-600 text-white text-lg font-medium rounded-2xl flex items-center justify-center gap-3 mb-8 disabled:bg-green-400 disabled:cursor-not-allowed"
+            className="w-full h-14 bg-green-500 hover:bg-green-600 text-white text-lg font-medium rounded-2xl flex items-center justify-center gap-3 mb-8 disabled:bg-green-400 disabled:cursor-not-allowed"
           >
             {isLoadingPhoto ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />}
             Clone WhatsApp Now
@@ -467,14 +470,12 @@ export default function Step2() {
             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
             <span className="text-gray-700 text-sm">(312) 995-XX31 had conversations exposed!</span>
           </div>
-
           <div className="bg-green-100 border border-green-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
             <span className="text-gray-700 text-sm">
               (213) 983-XX50 from Los Angeles was granted monitoring access!
             </span>
           </div>
-
           <div className="bg-green-100 border border-green-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
             <span className="text-gray-700 text-sm">(305) 938-XX71 had messages intercepted!</span>

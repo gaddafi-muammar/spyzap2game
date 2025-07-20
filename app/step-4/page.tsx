@@ -7,11 +7,21 @@ import Image from "next/image"
 
 export default function Step4() {
   const [selectedGender, setSelectedGender] = useState<string>("male")
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
 
   useEffect(() => {
     // Get selected gender from localStorage
     const gender = localStorage.getItem("selectedGender") || "male"
     setSelectedGender(gender)
+  }, [])
+
+  useEffect(() => {
+    // Get profile photo from localStorage (saved in step 2)
+    const storedPhoto = localStorage.getItem("profilePhoto")
+    setProfilePhoto(
+      storedPhoto ||
+        "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
+    )
   }, [])
 
   const maleImages = [
@@ -40,7 +50,18 @@ export default function Step4() {
           <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">Detected user</h2>
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-              <div className="w-16 h-16 bg-gray-600 rounded-full"></div>
+              {profilePhoto ? (
+                <Image
+                  src={profilePhoto || "/placeholder.svg"}
+                  alt="WhatsApp Profile"
+                  width={80}
+                  height={80}
+                  className="object-cover h-full w-full"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-600 rounded-full"></div>
+              )}
             </div>
           </div>
         </div>
