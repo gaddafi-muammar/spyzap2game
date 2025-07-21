@@ -115,7 +115,7 @@ export default function Step3() {
   useEffect(() => {
     if (!steps.length || currentSteps.length === 0) return // Don't run timers until steps are initialized
 
-    const totalDuration = 5 * 60 * 1000 // 5 minutes total duration
+    const totalDuration = 4 * 60 * 1000 // 5 minutes total duration
     const stepInterval = totalDuration / steps.length // Time per step
     const progressInterval = 100 // Update progress bar every 100ms for smoothness
 

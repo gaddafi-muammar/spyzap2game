@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention! Add one more feature</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8A2BE2;
+            --secondary-color: #9370DB;
+            --dark-text: #2c2c2c;
+            --light-text: #555;
+            --background-color: #fdfaff;
+            --white-color: #ffffff;
+            --border-color: #ebebeb;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            background-color: var(--background-color);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .main-content {
+            background-color: var(--white-color);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+        }
+        h1 {
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+        p {
+            font-size: 1.1rem;
+            color: var(--light-text);
+            margin-bottom: 25px;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        p.warning-text {
+            color: #d9534f;
+            font-weight: 700;
+        }
+        p.price-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark-text);
+        }
+        .mndpay_btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .mndpay_btn:hover {
+            background-color: var(--secondary-color);
+        }
+        .bonus-box {
+            text-align: left;
+            background-color: #f9f9f9;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 25px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .bonus-box h2 {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+        }
+        .bonus-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .bonus-box li {
+            margin-bottom: 10px;
+            color: var(--dark-text);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <img src="../assets/images/logo-cheatfinder.png" alt="CheatFinder Logo" style="max-width: 90px; display: block; margin: 0 auto 20px auto; border-radius: 50%;">
+            <h1>Priority Access: Skip the Line!</h1>
+            <p>Your access to the app has been granted, but what if I told you there's a way to speed up this process even further? Now that you're so close to accessing messages, photos, and even real-time locations, wouldn't it be incredible if you could skip the line and receive this information immediately?</p>
+            <p>With our <b>priority queue</b>, you can ensure that the messages and information you want are delivered much faster—practically in real time. It's like having a VIP pass: while others wait, you get the messages first.</p>
+            <div class="bonus-box">
+                <h2>Exclusive bonuses included for free:</h2>
+                <ul>
+                    <li>Priority Recovery <span>(Your files are processed with priority for faster results)</span></li>
+                    <li>24h Support <span>(Dedicated support for any questions about your recovery)</span></li>
+                    <li>Data Security Guarantee <span>(All restored files are encrypted and deleted from our servers after download)</span></li>
+                    <li>Detailed Recovery Report <span>(You receive a full report with everything that was recovered)</span></li>
+                    <li>Future Recovery Discount <span>(Get a discount coupon for your next recovery request)</span></li>
+                </ul>
+            </div>
+            <p>All of this without waiting in the standard queue. It's the fastest and most efficient way to get the answers you need right now.</p>
+            <p class="warning-text">But be aware: this priority option is exclusive and can only be activated now while you're setting up the app.</p>
+            <p><b>Remember: the truth is just one click away.</b> Don't let doubts control you any longer. Activate your priority now and uncover everything quickly and easily.</p>
+            
+            <a href="javascript:void(0)" data-mndpay="0196f90f-aa8c-7112-97cb-5d435bc47232" class="mndpay_btn">
+                🥇 Activate Priority
+            </a>
+        </div>
+    </div>
+    <script src="https://app.mundpay.com/js/oneclick.js"></script>
+</body>
+</html>
