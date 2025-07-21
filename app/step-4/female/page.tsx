@@ -409,9 +409,17 @@ export default function Step4Male() {
               <span>It was detected that this person archived 2 conversations yesterday</span>
             </div>
           </div>
-          <Button className="w-full rounded-full bg-[#26d366] py-3 text-lg font-bold text-white shadow-[0_4px_12px_rgba(38,211,102,0.3)] transition duration-150 ease-in-out hover:bg-[#22b858] hover:shadow-lg">
+          {/* ======================================================= */}
+          {/*     BOTÃO CORRIGIDO AQUI                              */}
+          {/* ======================================================= */}
+          <a
+            href="https://pay.mundpay.com/01982eae-80c3-70d5-ac4c-5d97f149e0e3?ref="
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full rounded-full bg-[#26d366] py-3 text-lg font-bold text-white text-center shadow-[0_4px_12px_rgba(38,211,102,0.3)] transition duration-150 ease-in-out hover:bg-[#22b858] hover:shadow-lg"
+          >
             BUY NOW →
-          </Button>
+          </a>
         </div>
 
         {/* 30 Days Guarantee */}
@@ -424,7 +432,6 @@ export default function Step4Male() {
       {selectedConvoIndex !== null && (
         <ChatPopup
           onClose={() => setSelectedConvoIndex(null)}
-          // --- CORREÇÃO APLICADA AQUI ---
           profilePhoto={conversations[selectedConvoIndex].img}
           conversationData={conversations[selectedConvoIndex].chatData}
           conversationName={conversations[selectedConvoIndex].popupName}
