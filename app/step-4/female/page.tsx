@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { X, Lock, CheckCheck, MapPin, AlertTriangle } from "lucide-react" // Adicionei MapPin e AlertTriangle para o mapa
+import { X, Lock, CheckCheck, MapPin, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 
-// Componente do mapa que criamos anteriormente
-const RealtimeMap = () => {
-  const lat = 39.8222
-  const lng = -7.4909
+// =======================================================
+//     MUDANÇA 1: O componente do mapa agora recebe a localização via props.
+// =======================================================
+const RealtimeMap = ({ lat, lng, city, country }: { lat: number; lng: number; city: string; country: string }) => {
   const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=13&output=embed`
 
   return (
@@ -36,8 +36,9 @@ const RealtimeMap = () => {
             <AlertTriangle className="h-5 w-5" />
             <span>SUSPICIOUS ACTIVITY DETECTED</span>
           </div>
-          <p className="text-sm text-gray-200">Location: Castelo Branco, Portugal</p>
-          <p className="text-sm text-gray-200">Coordinates: 39.8164, -7.5039</p>
+          {/* Exibe a localização dinâmica recebida pelas props */}
+          <p className="text-sm text-gray-200">Location: {city}, {country}</p>
+          <p className="text-sm text-gray-200">Coordinates: {lat.toFixed(4)}, {lng.toFixed(4)}</p>
           <p className="text-xs text-gray-300">Device was tracked to this area</p>
         </div>
       </div>
@@ -45,7 +46,7 @@ const RealtimeMap = () => {
   )
 }
 
-// Define the shape of a single message
+// Define o formato da mensagem (sem alterações)
 type Message = {
   type: "incoming" | "outgoing"
   content: string
@@ -53,7 +54,7 @@ type Message = {
   isBlocked?: boolean
 }
 
-// ChatPopup component
+// Componente do Popup do Chat (sem alterações)
 const ChatPopup = ({
   onClose,
   profilePhoto,
@@ -80,13 +81,12 @@ const ChatPopup = ({
             <Image
               src={
                 profilePhoto ||
-                "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=" ||
-                "/placeholder.svg"
+                "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI="
               }
               alt="Profile"
               width={40}
               height={40}
-              className="object-cover h-full w-full" // Removi o blur para a foto do popup
+              className="object-cover h-full w-full"
               unoptimized
             />
           </div>
@@ -96,7 +96,7 @@ const ChatPopup = ({
           </div>
         </div>
 
-        {/* Chat Body */}
+        {/* Corpo do Chat */}
         <div className="bg-gray-200 p-4 space-y-4 h-[28rem] overflow-y-scroll">
           {conversationData.map((msg, index) =>
             msg.type === "incoming" ? (
@@ -124,7 +124,7 @@ const ChatPopup = ({
           )}
         </div>
 
-        {/* Unlock Footer */}
+        {/* Rodapé de Desbloqueio */}
         <div className="absolute bottom-0 left-0 right-0 p-5 text-center bg-gradient-to-t from-white via-white/95 to-transparent">
           <p className="text-gray-700 font-medium">To view the full conversation, you need to unlock the chats.</p>
         </div>
@@ -133,10 +133,22 @@ const ChatPopup = ({
   )
 }
 
-export default function Step4Male() {
-  // Changed from Step4Female to Step4Male
+export default function Step4Female() { // Nome do componente ajustado para Step4Female
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
   const [selectedConvoIndex, setSelectedConvoIndex] = useState<number | null>(null)
+
+  // =======================================================
+  //     MUDANÇA 2: Adicionando estados para a localização.
+  // =======================================================
+  const [location, setLocation] = useState<{ lat: number; lng: number; city: string; country: string } | null>(null)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true)
+
+  const defaultLocation = {
+    lat: -23.5505,
+    lng: -46.6333,
+    city: "São Paulo",
+    country: "Brazil",
+  }
 
   useEffect(() => {
     const storedPhoto = localStorage.getItem("profilePhoto")
@@ -144,9 +156,44 @@ export default function Step4Male() {
       storedPhoto ||
         "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
     )
+
+    // =======================================================
+    //     MUDANÇA 3: Adicionando a lógica para buscar a localização.
+    // =======================================================
+    const fetchLocation = async () => {
+      try {
+        const response = await fetch('/api/location');
+
+        if (!response.ok) {
+          throw new Error(`A resposta da nossa API interna não foi ok. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.lat && data.lon) {
+          setLocation({
+            lat: data.lat,
+            lng: data.lon,
+            city: data.city,
+            country: data.country,
+          });
+        } else {
+          console.warn("API interna não retornou os dados esperados.", data.error);
+          setLocation(defaultLocation);
+        }
+      } catch (error) {
+        console.error("Falha ao buscar localização da API interna:", error);
+        setLocation(defaultLocation);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    fetchLocation();
   }, [])
 
-  const maleImages = [
+  // Seus dados estáticos (com caminhos de imagem para 'female')
+  const femaleImages = [
     "/images/female/4-h.png",
     "/images/female/5-h.png",
     "/images/female/6-h.png",
@@ -212,7 +259,7 @@ export default function Step4Male() {
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-green-500 text-white text-center py-4">
-        <h1 className="text-xl font-bold">WhatsApp Access Report Profile</h1> {/* Changed header text */}
+        <h1 className="text-xl font-bold">WhatsApp Access Report Profile</h1>
         <p className="text-sm opacity-90">Check below the most relevant from the analysis of the personal mobile</p>
       </div>
 
@@ -293,7 +340,7 @@ export default function Step4Male() {
           </p>
 
           <div className="grid grid-cols-3 gap-3">
-            {maleImages.map((image, index) => (
+            {femaleImages.map((image, index) => ( // Ajustado para usar femaleImages
               <div key={index} className="aspect-square relative rounded-lg overflow-hidden">
                 <Image
                   src={image || "/placeholder.svg"}
@@ -339,7 +386,22 @@ export default function Step4Male() {
             <h2 className="text-lg font-semibold text-gray-800">Suspicious Location</h2>
           </div>
           <p className="text-sm text-gray-600 mb-4">The device location was tracked. Check below:</p>
-          <RealtimeMap />
+          
+          {/* ======================================================= */}
+          {/*     MUDANÇA 4: Renderização condicional do mapa.          */}
+          {/* ======================================================= */}
+          {isLoadingLocation ? (
+            <div className="text-center p-10 text-gray-500 h-96 flex items-center justify-center">
+              <p>Detecting location based on your connection...</p>
+            </div>
+          ) : (
+            <RealtimeMap
+              lat={location?.lat ?? defaultLocation.lat}
+              lng={location?.lng ?? defaultLocation.lng}
+              city={location?.city ?? defaultLocation.city}
+              country={location?.country ?? defaultLocation.country}
+            />
+          )}
         </div>
 
         {/* Phone Display */}
@@ -358,30 +420,13 @@ export default function Step4Male() {
           </div>
 
           <div className="space-y-4 text-sm text-gray-600">
-            <p>
-              <strong>
-                You have reached the end of your free consultation. I know you're tired of guessing and want some real
-                answers.
-              </strong>
-            </p>
-            <p>
-              Our satellite tracking system is the most advanced technology to find out what’s going on. But there’s a
-              catch: keeping the satellites and servers running 24/7 is expensive.
-            </p>
+            <p><strong>You have reached the end of your free consultation.</strong> I know you're tired of guessing and want some real answers.</p>
+            <p>Our satellite tracking system is the most advanced technology to find out what’s going on. But there’s a catch: keeping the satellites and servers running 24/7 is expensive.</p>
             <p>That’s why, unfortunately, we can’t provide more than 5% of the information we uncover for free.</p>
             <p>The good news? You don’t have to spend a fortune to hire a private investigator.</p>
-            <p>
-              We’ve developed an app that puts that same technology in your hands and lets you track everything
-              discreetly and efficiently on your own.
-            </p>
-            <p>
-              And the best part? The costs are a fraction of what you’d pay for an investigator – just enough to keep
-              our satellites and system running.
-            </p>
-            <p>
-              It’s time to stop guessing and find out the truth. The answers are waiting for you. Click now and get
-              instant access – before it’s too late!
-            </p>
+            <p>We’ve developed an app that puts that same technology in your hands and lets you track everything discreetly and efficiently on your own.</p>
+            <p>And the best part? The costs are a fraction of what you’d pay for an investigator – just enough to keep our satellites and system running.</p>
+            <p>It’s time to stop guessing and find out the truth. The answers are waiting for you. Click now and get instant access – before it’s too late!</p>
           </div>
         </div>
 
@@ -392,26 +437,11 @@ export default function Step4Male() {
           <div className="text-4xl font-bold mb-4 text-center">$47</div>
 
           <div className="space-y-2 text-sm mb-6 text-left">
-            <div className="flex items-center gap-4">
-              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-              <span>This person recently communicated whith 3 people from (IP)</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-              <span>Our AI detected a suspicious message</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-              <span>It was deteced that this person viewed the status of contact ****** 6 times today</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" />
-              <span>It was detected that this person archived 2 conversations yesterday</span>
-            </div>
+            <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>This person recently communicated whith 3 people from (IP)</span></div>
+            <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>Our AI detected a suspicious message</span></div>
+            <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>It was deteced that this person viewed the status of contact ****** 6 times today</span></div>
+            <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>It was detected that this person archived 2 conversations yesterday</span></div>
           </div>
-          {/* ======================================================= */}
-          {/*     BOTÃO CORRIGIDO AQUI                              */}
-          {/* ======================================================= */}
           <a
             href="https://pay.mundpay.com/01982eae-80c3-70d5-ac4c-5d97f149e0e3?ref="
             target="_blank"
