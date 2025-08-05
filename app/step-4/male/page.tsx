@@ -261,6 +261,7 @@ export default function Step4Male() {
           <p className="text-sm text-gray-600 mb-4">
             <span className="font-semibold text-red-500">148 suspicious conversations</span> were found. The system recovered <span className="font-semibold text-orange-500">deleted messages</span>.
           </p>
+           <p className="text-xs text-gray-500 mb-4">Tap a conversation below to view details.</p>
           <div className="space-y-3">
             {conversations.map((convo, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onClick={() => setSelectedConvoIndex(index)}>
