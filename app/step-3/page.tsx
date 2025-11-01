@@ -191,7 +191,7 @@ export default function Step3() {
             >
               <img
                 id="thumb_682f00e76834fb1c772a37ac"
-                src="https://images.converteai.net/afe361de-d52c-4970-970c-977eb531f274/players/682f00e76834fb1c772a37ac/thumbnail.jpg"
+                src="/images/design-mode/thumbnail.jpg"
                 style={{
                   position: "absolute",
                   top: 0,
