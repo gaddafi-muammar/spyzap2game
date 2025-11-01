@@ -2,7 +2,7 @@
 
 import { type NextRequest, NextResponse } from "next/server"
 
-// --- CONFIGURAÇÃO FINAL DA API ---
+// --- CONFIGURAÇÃO DA API ---
 const CORRECT_API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
 const CORRECT_API_HOST = "whatsapp-data.p.rapidapi.com";
 // ---------------------------------------------------------
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Número de telefone inválido ou muito curto" }, { status: 400 });
     }
     
-    // O número de telefone vai como um parâmetro na URL.
     const url = `${CORRECT_API_ENDPOINT}?phone=${fullNumber}`;
     
     const options = {
@@ -36,29 +35,28 @@ export async function POST(request: NextRequest) {
         'x-rapidapi-key': rapidApiKey,
         'x-rapidapi-host': CORRECT_API_HOST,
       },
-      signal: AbortSignal.timeout?.(25_000), // Timeout de 25 segundos
+      signal: AbortSignal.timeout?.(25_000),
     };
 
     const response = await fetch(url, options);
 
     if (!response.ok) {
       console.error(`A API (${CORRECT_API_HOST}) retornou o status: ${response.status} para o número: ${fullNumber}`);
-      const errorBody = await response.text();
-      console.error("Corpo do erro da API:", errorBody);
       return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
     }
     
-    const result = await response.json();
-    console.log(`Resposta de ${CORRECT_API_HOST}:`, JSON.stringify(result, null, 2));
+    // --- MUDANÇA CRÍTICA AQUI ---
+    // Em vez de 'response.json()', vamos ler como texto para evitar o erro de JSON inválido.
+    const responseBodyText = await response.text();
+    console.log(`Resposta bruta (texto) de ${CORRECT_API_HOST}:`, responseBodyText);
 
-    // A nossa lógica flexível vai procurar a URL da foto na resposta.
-    // Baseado no nome do endpoint, a chave pode ser 'picture', 'url', etc.
-    const photoUrl = result.url || result.link || result.profile_pic_url || result.picture;
-    const isPhotoAvailable = photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('http');
+    // Verificamos se a resposta em texto é uma URL válida.
+    const isPhotoAvailable = responseBodyText && responseBodyText.startsWith('http');
 
     return NextResponse.json({ 
       success: true,
-      result: isPhotoAvailable ? photoUrl : FALLBACK_PHOTO_URL, 
+      // Se for uma URL, usamos ela. Senão, usamos a imagem de fallback.
+      result: isPhotoAvailable ? responseBodyText : FALLBACK_PHOTO_URL, 
       is_photo_private: !isPhotoAvailable,
     });
 
