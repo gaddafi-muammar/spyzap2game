@@ -3,8 +3,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // --- CONFIGURAÇÃO FINAL E CORRETA DA API ---
-const CORRECT_API_ENDPOINT = "https://whatsapp-profile-picture-api.p.rapidapi.com/user-profile-picture";
-const CORRECT_API_HOST = "whatsapp-profile-picture-api.p.rapidapi.com";
+const CORRECT_API_ENDPOINT = "https://whatsapp-data-api.p.rapidapi.com/api/whatsapp/user-profile-picture";
+const CORRECT_API_HOST = "whatsapp-data-api.p.rapidapi.com";
 // ---------------------------------------------------------
 
 const rapidApiKey = process.env.RAPIDAPI_KEY;
@@ -12,23 +12,24 @@ const FALLBACK_PHOTO_URL = "https://media.istockphoto.com/id/1337144146/vector/d
 
 export async function POST(request: NextRequest) {
   if (!rapidApiKey) {
-    console.error("RAPIDAPI_KEY not found in environment variables. Make sure it's set in .env.local");
-    return NextResponse.json({ success: false, error: "Server configuration error" }, { status: 500 });
+    console.error("A variável RAPIDAPI_KEY não foi encontrada. Verifique seu arquivo .env.local");
+    return NextResponse.json({ success: false, error: "Erro de configuração no servidor" }, { status: 500 });
   }
   
   try {
     const { phone } = await request.json();
     if (!phone) {
-      return NextResponse.json({ success: false, error: "Phone number is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "O número de telefone é obrigatório" }, { status: 400 });
     }
 
     const fullNumber = String(phone).replace(/[^0-9]/g, "");
     if (fullNumber.length < 10) {
-      return NextResponse.json({ success: false, error: "Invalid or too short phone number" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Número de telefone inválido ou muito curto" }, { status: 400 });
     }
     
-    // O parâmetro para esta API parece ser 'number', não 'phone'. Vamos ajustar.
-    const url = `${CORRECT_API_ENDPOINT}?number=${fullNumber}`;
+    // Continuamos com a suposição de que o parâmetro na URL é 'phone'.
+    // Ex: ?phone=18002223333
+    const url = `${CORRECT_API_ENDPOINT}?phone=${fullNumber}`;
     
     const options = {
       method: 'GET',
@@ -42,17 +43,17 @@ export async function POST(request: NextRequest) {
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      console.error(`RapidAPI (${CORRECT_API_HOST}) returned status: ${response.status} for number: ${fullNumber}`);
+      console.error(`A API (${CORRECT_API_HOST}) retornou o status: ${response.status} para o número: ${fullNumber}`);
       const errorBody = await response.text();
-      console.error("RapidAPI error body:", errorBody);
+      console.error("Corpo do erro da API:", errorBody);
       return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
     }
     
     const result = await response.json();
-    console.log(`Response from ${CORRECT_API_HOST}:`, JSON.stringify(result, null, 2));
+    console.log(`Resposta de ${CORRECT_API_HOST}:`, JSON.stringify(result, null, 2));
 
-    // A lógica para encontrar a URL da foto continua flexível
-    const photoUrl = result.url || result.link || result.profile_pic_url || result.picture || result.avatar;
+    // Nossa lógica flexível vai procurar a URL da foto na resposta.
+    const photoUrl = result.url || result.link || result.profile_pic_url || result.picture;
     const isPhotoAvailable = photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('http');
 
     return NextResponse.json({ 
@@ -63,9 +64,9 @@ export async function POST(request: NextRequest) {
 
   } catch (err: any) {
     if (err.name === 'TimeoutError') {
-      console.error(`TimeoutError: Request to ${CORRECT_API_HOST} took too long.`);
+      console.error(`TimeoutError: A requisição para ${CORRECT_API_HOST} demorou demais.`);
     } else {
-      console.error("Error in API route:", err);
+      console.error("Erro na rota da API:", err);
     }
     return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
   }

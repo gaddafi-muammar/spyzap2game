@@ -233,6 +233,8 @@ export default function Step2() {
   const [photoError, setPhotoError] = useState("")
   const [isPhotoPrivate, setIsPhotoPrivate] = useState(false)
 
+   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null)
+
   // Filter countries based on search input
   const filteredCountries = countries.filter(
     (country) =>
@@ -281,21 +283,33 @@ export default function Step2() {
     }
   }
 
-  // Handles changes in the phone number input field
+    // --- FUNÇÃO DE INPUT ATUALIZADA COM DEBOUNCE ---
   const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = e.target.value.replace(/[^0-9-()\s]/g, "")
     setPhoneNumber(formattedValue)
 
-    const fullNumberForApi = selectedCountry.code + formattedValue
-    const cleanPhone = fullNumberForApi.replace(/[^0-9]/g, "")
-
-    if (cleanPhone.length >= 11) {
-      fetchWhatsAppPhoto(cleanPhone)
-    } else {
-      setProfilePhoto("/placeholder.svg")
-      setIsPhotoPrivate(false)
-      setPhotoError("")
+    // 1. Limpa qualquer timer anterior. Se o usuário digitar de novo, o timer antigo é cancelado.
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout)
     }
+
+    // 2. Cria um novo timer para executar a busca após 7 segundos.
+    const newTimeout = setTimeout(() => {
+      const fullNumberForApi = selectedCountry.code + formattedValue
+      const cleanPhone = fullNumberForApi.replace(/[^0-9]/g, "")
+
+      if (cleanPhone.length >= 11) {
+        fetchWhatsAppPhoto(cleanPhone)
+      } else {
+        // Se o número for muito curto após o timer, reseta a imagem.
+        setProfilePhoto("/placeholder.svg")
+        setIsPhotoPrivate(false)
+        setPhotoError("")
+      }
+    }, 2000) // 2000 milissegundos = 2 segundos
+
+    // 3. Guarda o ID do novo timer no estado.
+    setDebounceTimeout(newTimeout)
   }
 
   // Handles selecting a new country from the dropdown
@@ -307,6 +321,8 @@ export default function Step2() {
     setProfilePhoto(null)
     setIsPhotoPrivate(false)
     setPhotoError("")
+    // Limpa o timer se o país for trocado
+    if (debounceTimeout) clearTimeout(debounceTimeout)
   }
 
   // Submits the form and proceeds to the next step
@@ -332,8 +348,16 @@ export default function Step2() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [showCountryDropdown])
+    
+    // Boa prática: Limpa o timer se o componente for "desmontado" (se o usuário sair da página)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    }
+  }, [showCountryDropdown, debounceTimeout]) // Adiciona debounceTimeout às dependências
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
