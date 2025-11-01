@@ -2,9 +2,9 @@
 
 import { type NextRequest, NextResponse } from "next/server"
 
-// --- CONFIGURAÇÃO FINAL E CORRETA DA API ---
-const CORRECT_API_ENDPOINT = "https://whatsapp-data-api.p.rapidapi.com/api/whatsapp/user-profile-picture";
-const CORRECT_API_HOST = "whatsapp-data-api.p.rapidapi.com";
+// --- CONFIGURAÇÃO FINAL DA API ---
+const CORRECT_API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
+const CORRECT_API_HOST = "whatsapp-data.p.rapidapi.com";
 // ---------------------------------------------------------
 
 const rapidApiKey = process.env.RAPIDAPI_KEY;
@@ -27,8 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Número de telefone inválido ou muito curto" }, { status: 400 });
     }
     
-    // Continuamos com a suposição de que o parâmetro na URL é 'phone'.
-    // Ex: ?phone=18002223333
+    // O número de telefone vai como um parâmetro na URL.
     const url = `${CORRECT_API_ENDPOINT}?phone=${fullNumber}`;
     
     const options = {
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
         'x-rapidapi-key': rapidApiKey,
         'x-rapidapi-host': CORRECT_API_HOST,
       },
-      signal: AbortSignal.timeout?.(25_000),
+      signal: AbortSignal.timeout?.(25_000), // Timeout de 25 segundos
     };
 
     const response = await fetch(url, options);
@@ -52,7 +51,8 @@ export async function POST(request: NextRequest) {
     const result = await response.json();
     console.log(`Resposta de ${CORRECT_API_HOST}:`, JSON.stringify(result, null, 2));
 
-    // Nossa lógica flexível vai procurar a URL da foto na resposta.
+    // A nossa lógica flexível vai procurar a URL da foto na resposta.
+    // Baseado no nome do endpoint, a chave pode ser 'picture', 'url', etc.
     const photoUrl = result.url || result.link || result.profile_pic_url || result.picture;
     const isPhotoAvailable = photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('http');
 
