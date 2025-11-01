@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attention! Add one more feature</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,22 +65,9 @@
             font-weight: 700;
             color: var(--dark-text);
         }
-        .mndpay_btn {
-            display: inline-block;
-            background-color: var(--primary-color);
-            color: var(--white-color);
-            padding: 20px 40px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
+        /* Style for Hotmart container to have some top margin */
+        #hotmart-sales-funnel {
             margin-top: 20px;
-            transition: background-color 0.3s;
-        }
-        .mndpay_btn:hover {
-            background-color: var(--secondary-color);
         }
         .bonus-box {
             text-align: left;
@@ -129,11 +116,18 @@
             <p class="warning-text">But be aware: this priority option is exclusive and can only be activated now while you're setting up the app.</p>
             <p><b>Remember: the truth is just one click away.</b> Don't let doubts control you any longer. Activate your priority now and uncover everything quickly and easily.</p>
             
-            <a href="javascript:void(0)" data-mndpay="01982ec4-35f8-735c-8229-d1e66261be0e" class="mndpay_btn">
-                🥇 Activate Priority
-            </a>
+            <!-- HOTMART - Sales Funnel Widget -->
+            <!--- sales funnel container --->
+            <div id="hotmart-sales-funnel"></div>
+            
         </div>
     </div>
-    <script src="https://upsell.mundpay.com/script.js"></script>
+
+    <!--- script load and setup --->
+    <script src="https://checkout.hotmart.com/lib/hotmart-checkout-elements.js"></script>
+    <script>
+    checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel')
+    </script>
+    <!-- HOTMART - Sales Funnel Widget -->
 </body>
 </html>
