@@ -158,8 +158,14 @@ export default function Step3() {
         <div className="bg-white rounded-lg shadow-md w-full max-w-md overflow-hidden">
           <div className="p-4">
             <div className="aspect-video rounded-md overflow-hidden shadow-lg bg-black">
-              {/* O player de vídeo será injetado aqui pelo script da Vturb */}
-              <div id="vid-690696cdf19aad22a5567aea" />
+              <vturb-smartplayer
+                id="vid-690696cdf19aad22a5567aea"
+                style={{
+                  display: "block",
+                  margin: "0 auto",
+                  width: "100%",
+                }}
+              />
             </div>
           </div>
 
@@ -274,11 +280,19 @@ export default function Step3() {
         </footer>
       </div>
 
-      {/* Componente <Script> para carregar o player de vídeo de forma otimizada */}
       <Script
         id="vturb-player-script"
-        src="https://scripts.converteai.net/8671d2f6-c45f-4b55-9776-68f6c495a79a/players/690696cdf19aad22a5567aea/v4/player.js"
         strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              var s = document.createElement("script");
+              s.src = "https://scripts.converteai.net/8671d2f6-c45f-4b55-9776-68f6c495a79a/players/690696cdf19aad22a5567aea/v4/player.js";
+              s.async = true;
+              document.head.appendChild(s);
+            })();
+          `,
+        }}
       />
     </>
   )
