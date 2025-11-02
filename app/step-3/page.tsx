@@ -42,25 +42,28 @@ export default function Step3() {
     )
 
     const fetchLocation = async () => {
-      try {
-        // Create an AbortController with a 5-second timeout
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000)
+  try {
+    // Cria um AbortController com um timeout de 5 segundos
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-        const response = await fetch("https://ipapi.co/json/", {
-          signal: controller.signal,
-        })
-        clearTimeout(timeoutId)
+    // Chama a sua API interna em /api/location
+    const response = await fetch("/api/location", {
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
 
-        if (!response.ok) throw new Error("Failed to fetch location")
-        const data = await response.json()
-        setLocation(data.city || "Unknown Location")
-      } catch (error) {
-        // Silently fail with fallback - don't block the page
-        console.error("[v0] Location fetch error:", error)
-        setLocation("Your Location")
-      }
-    }
+    if (!response.ok) throw new Error("Failed to fetch location from internal API")
+    const data = await response.json()
+    
+    // Define a localização com base na resposta da sua API
+    setLocation(data.city || "Unknown Location") 
+  } catch (error) {
+    // Falha silenciosa com um fallback
+    console.error("[v0] Location fetch error:", error)
+    setLocation("Your Location") // Fallback em caso de erro
+  }
+}
 
     // Call fetchLocation without awaiting to prevent blocking
     fetchLocation()
