@@ -41,21 +41,30 @@ export default function Step3() {
         "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
     )
 
-    // Busca a localização do usuário com base no IP
     const fetchLocation = async () => {
       try {
-        const response = await fetch("https://ipapi.co/json/")
+        // Create an AbortController with a 5-second timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+        const response = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
         if (!response.ok) throw new Error("Failed to fetch location")
         const data = await response.json()
         setLocation(data.city || "Unknown Location")
       } catch (error) {
-        console.error("Location fetch error:", error)
-        setLocation("Unknown Location") // Fallback em caso de erro
+        // Silently fail with fallback - don't block the page
+        console.error("[v0] Location fetch error:", error)
+        setLocation("Your Location")
       }
     }
 
+    // Call fetchLocation without awaiting to prevent blocking
     fetchLocation()
-  }, []) // O array vazio [] garante que este efeito rode apenas uma vez
+  }, [])
 
   // Memoiza a lista de passos para que ela seja recriada apenas quando a 'location' mudar
   const steps: ProgressStep[] = useMemo(
