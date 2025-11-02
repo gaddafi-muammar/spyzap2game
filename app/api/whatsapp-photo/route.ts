@@ -2,60 +2,57 @@
 
 import { type NextRequest, NextResponse } from "next/server"
 
-const CORRECT_API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
-const CORRECT_API_HOST = "whatsapp-data.p.rapidapi.com";
+// Constantes de configuração da API para fácil manutenção
+const API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
+const API_HOST = "whatsapp-data.p.rapidapi.com";
 const FALLBACK_PHOTO_URL = "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=";
 
 export async function POST(request: NextRequest) {
-  // --- LOG 1: VERIFICANDO A CHAVE DE API ---
   const rapidApiKey = process.env.RAPIDAPI_KEY;
-  console.log("--- INICIANDO REQUISIÇÃO ---");
+
+  // Verificação de segurança: Garante que a chave da API está configurada no servidor
   if (!rapidApiKey) {
-    console.error("ERRO CRÍTICO: A variável RAPIDAPI_KEY não foi encontrada!");
+    console.error("ERRO CRÍTICO: A variável RAPIDAPI_KEY não foi encontrada nas variáveis de ambiente!");
     return NextResponse.json({ success: false, error: "Erro de configuração no servidor" }, { status: 500 });
   }
-  console.log("Chave de API carregada com sucesso."); // Se esta mensagem não aparecer, o problema é aqui.
   
   try {
     const { phone } = await request.json();
+
+    // Validação da requisição recebida do frontend
     if (!phone) {
       return NextResponse.json({ success: false, error: "O número de telefone é obrigatório" }, { status: 400 });
     }
-
     const fullNumber = String(phone).replace(/[^0-9]/g, "");
     if (fullNumber.length < 10) {
       return NextResponse.json({ success: false, error: "Número de telefone inválido ou muito curto" }, { status: 400 });
     }
-
-    // --- LOG 2: VERIFICANDO O NÚMERO E A URL ---
-    const url = `${CORRECT_API_ENDPOINT}?phone=${fullNumber}`;
-    console.log(`Enviando requisição para a API com o número: ${fullNumber}`);
-    console.log(`URL completa da requisição: ${url}`);
     
+    // Prepara e executa a chamada para a API externa
+    const url = `${API_ENDPOINT}?phone=${fullNumber}`;
     const options = {
       method: 'GET',
       headers: {
         'x-rapidapi-key': rapidApiKey,
-        'x-rapidapi-host': CORRECT_API_HOST,
+        'x-rapidapi-host': API_HOST,
       },
-      signal: AbortSignal.timeout?.(25_000),
+      signal: AbortSignal.timeout?.(25_000), // Timeout de 25 segundos para evitar requisições presas
     };
 
     const response = await fetch(url, options);
 
-    // --- LOG 3: VERIFICANDO A RESPOSTA ---
-    const responseBodyText = await response.text();
-    console.log(`Status da resposta da API: ${response.status}`);
-    console.log(`Resposta bruta (texto) de ${CORRECT_API_HOST}:`, responseBodyText);
-
+    // Lida com casos onde a API externa retorna um erro (ex: 401, 403, 500)
     if (!response.ok) {
-      console.error(`A API retornou um erro (status: ${response.status})`);
+      console.error(`A API externa (${API_HOST}) retornou um erro com status: ${response.status}`);
       return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
     }
-
-    const isPhotoAvailable = responseBodyText && responseBodyText.startsWith('http');
-    console.log(`A foto está disponível? ${isPhotoAvailable ? "SIM" : "NÃO"}`);
     
+    // Lógica crucial: lê a resposta como texto, pois a API pode retornar uma URL ou uma mensagem de erro em texto puro
+    const responseBodyText = await response.text();
+
+    // Verifica se a resposta é uma URL de imagem utilizável
+    const isPhotoAvailable = responseBodyText && responseBodyText.startsWith('http');
+
     return NextResponse.json({ 
       success: true,
       result: isPhotoAvailable ? responseBodyText : FALLBACK_PHOTO_URL, 
@@ -63,11 +60,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error("Ocorreu um erro dentro do bloco try...catch:", err);
+    // Captura erros de rede, timeouts ou outras falhas inesperadas
+    console.error("Ocorreu um erro inesperado na rota da API:", err);
     return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
   }
 }
 
+// Função essencial para lidar com requisições de pre-flight (CORS)
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
