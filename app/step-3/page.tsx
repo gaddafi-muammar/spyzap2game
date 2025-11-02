@@ -25,11 +25,10 @@ export default function Step3() {
   const [progress, setProgress] = useState(0)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
-  const [visibleSteps, setVisibleSteps] = useState<number>(1) // Only show first step initially
+  const [visibleSteps, setVisibleSteps] = useState<number>(1)
 
   // Fetch IP-based location and data from localStorage on mount
   useEffect(() => {
-    // Retrieve data from Step 2
     const storedPhone = localStorage.getItem("phoneNumber")
     const storedPhoto = localStorage.getItem("profilePhoto")
 
@@ -39,7 +38,6 @@ export default function Step3() {
         "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=",
     )
 
-    // Fetch user's location based on their IP address
     const fetchLocation = async () => {
       try {
         const response = await fetch("https://ipapi.co/json/")
@@ -48,35 +46,28 @@ export default function Step3() {
         setLocation(data.city || "Unknown Location")
       } catch (error) {
         console.error("Location fetch error:", error)
-        setLocation("Unknown Location") // Fallback
+        setLocation("Unknown Location")
       }
     }
 
     fetchLocation()
   }, [])
 
-  // Load ConverteAI video script
+  // Carregamento do Script da Vturb/ConverteAI
   useEffect(() => {
-    const scriptId = "scr_682f00e76834fb1c772a37ac"
-
-    // Check if script is already loaded
+    const scriptId = "vturb-player-script"
     if (document.getElementById(scriptId)) {
-      return // Script already exists, don't add it again
+      return
     }
-
     const script = document.createElement("script")
-    script.src =
-      "https://scripts.converteai.net/afe361de-d52c-4970-970c-977eb531f274/players/682f00e76834fb1c772a37ac/player.js"
-    script.async = true
     script.id = scriptId
-
+    script.src = "https://scripts.converteai.net/8671d2f6-c45f-4b55-9776-68f6c495a79a/players/690696cdf19aad22a5567aea/v4/player.js"
+    script.async = true
     document.head.appendChild(script)
-
     return () => {
-      // Cleanup script on unmount - check if it exists and has a parent before removing
       const existingScript = document.getElementById(scriptId)
-      if (existingScript && existingScript.parentNode) {
-        existingScript.parentNode.removeChild(existingScript)
+      if (existingScript) {
+        existingScript.remove()
       }
     }
   }, [])
@@ -104,20 +95,20 @@ export default function Step3() {
 
   const [currentSteps, setCurrentSteps] = useState<ProgressStep[]>([])
 
-  // Initialize steps once the base `steps` array is ready
+  // Initialize steps
   useEffect(() => {
     if (steps.length > 0 && currentSteps.length === 0) {
       setCurrentSteps(steps.map((step, index) => (index === 0 ? { ...step, status: "loading" } : step)))
     }
   }, [steps, currentSteps.length])
 
-  // Timer for progress bar and step completion - 5 minutes total
+  // Timer for progress bar and steps
   useEffect(() => {
-    if (!steps.length || currentSteps.length === 0) return // Don't run timers until steps are initialized
+    if (!steps.length || currentSteps.length === 0) return
 
-    const totalDuration = 4 * 60 * 1000 // 5 minutes total duration
-    const stepInterval = totalDuration / steps.length // Time per step
-    const progressInterval = 100 // Update progress bar every 100ms for smoothness
+    const totalDuration = 4 * 60 * 1000
+    const stepInterval = totalDuration / steps.length
+    const progressInterval = 100
 
     const progressTimer = setInterval(() => {
       setProgress((prev) => {
@@ -134,7 +125,6 @@ export default function Step3() {
       setCurrentStepIndex((prev) => {
         const nextIndex = prev + 1
         if (nextIndex < steps.length) {
-          // Complete current step and start next one
           setCurrentSteps((current) =>
             current.map((step, index) => {
               if (index < nextIndex) return { ...step, status: "completed" }
@@ -142,13 +132,9 @@ export default function Step3() {
               return step
             }),
           )
-
-          // Show next step in the list (reveal one more step)
           setVisibleSteps(nextIndex + 1)
-
           return nextIndex
         } else {
-          // Complete all steps
           setCurrentSteps((current) => current.map((step) => ({ ...step, status: "completed" })))
           clearInterval(stepTimer)
           return prev
@@ -163,9 +149,7 @@ export default function Step3() {
   }, [steps, currentSteps.length])
 
   const handleViewReport = () => {
-    // Get selected gender from localStorage
     const selectedGender = localStorage.getItem("selectedGender") || "male"
-
     if (selectedGender === "female") {
       router.push("/step-4/female")
     } else {
@@ -175,52 +159,20 @@ export default function Step3() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-8 gap-6">
-      {/* Combined Video and Profile Card */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-md overflow-hidden">
-        {/* Video Section */}
         <div className="p-4">
-          <div className="aspect-[9/16] rounded-md overflow-hidden shadow-lg bg-black">
-            {/* ConverteAI Video Player */}
-            <div
-              id="vid_682f00e76834fb1c772a37ac"
-              style={{
-                position: "relative",
-                width: "100%",
-                padding: "177.78% 0 0",
-              }}
-            >
-              <img
-                id="thumb_682f00e76834fb1c772a37ac"
-                src="/images/design-mode/thumbnail.jpg"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-                alt="thumbnail"
-              />
-              <div
-                id="backdrop_682f00e76834fb1c772a37ac"
-                style={{
-                  WebkitBackdropFilter: "blur(5px)",
-                  backdropFilter: "blur(5px)",
-                  position: "absolute",
-                  top: 0,
-                  height: "100%",
-                  width: "100%",
-                }}
-              />
-            </div>
+          
+          {/* --- CORREÇÃO AQUI --- */}
+          {/* Alterado de 'aspect-[9/16]' para 'aspect-video' (que é 16:9) */}
+          <div className="aspect-video rounded-md overflow-hidden shadow-lg bg-black">
+            <div id="vid-690696cdf19aad22a5567aea" />
           </div>
+
         </div>
 
         {/* Profile and Progress Section */}
         <div className="p-6 pt-2">
-          {/* Profile Info - Centralized */}
+          {/* Profile Info */}
           <div className="flex flex-col items-center text-center mb-6">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-300 mb-3">
               {profilePhoto ? (
@@ -265,7 +217,6 @@ export default function Step3() {
                 </div>
               </div>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                {/* Only show steps up to visibleSteps count */}
                 {currentSteps.slice(0, visibleSteps).map((step, index) => (
                   <div
                     key={step.id}
