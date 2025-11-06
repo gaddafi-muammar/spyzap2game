@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         'x-rapidapi-key': rapidApiKey,
         'x-rapidapi-host': API_HOST,
       },
-      signal: AbortSignal.timeout?.(25_000), // Timeout de 25 segundos para evitar requisições presas
+      signal: AbortSignal.timeout?.(9_000), // Timeout de 25 segundos para evitar requisições presas
     };
 
     const response = await fetch(url, options);
