@@ -443,7 +443,7 @@ export default function Step4Female() { // Nome do componente ajustado para Step
             <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>It was detected that this person archived 2 conversations yesterday</span></div>
           </div>
           <a
-            href="https://pay.hotmart.com/R102720481T?checkoutMode=10"
+            href="https://pay.hotmart.com/R102720481T?off=m3prb7n1&checkoutMode=10"
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full rounded-full bg-[#26d366] py-3 text-lg font-bold text-white text-center shadow-[0_4px_12px_rgba(38,211,102,0.3)] transition duration-150 ease-in-out hover:bg-[#22b858] hover:shadow-lg"
