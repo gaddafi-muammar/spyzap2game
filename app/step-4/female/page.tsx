@@ -433,8 +433,8 @@ export default function Step4Female() { // Nome do componente ajustado para Step
         {/* Exclusive Discount */}
         <div className="bg-[#0A3622] text-white rounded-lg p-6">
           <h2 className="text-2xl font-bold text-center">EXCLUSIVE DISCOUNT</h2>
-          <div className="text-xl text-red-400 line-through text-center my-2">$97</div>
-          <div className="text-4xl font-bold mb-4 text-center">$17</div>
+          <div className="text-xl text-red-400 line-through text-center my-2">$197</div>
+          <div className="text-4xl font-bold mb-4 text-center">$37</div>
 
           <div className="space-y-2 text-sm mb-6 text-left">
             <div className="flex items-center gap-4"><img src="/images/icone-check.png" alt="Ícone de verificação" className="h-8 w-8" /><span>This person recently communicated whith 3 people from (IP)</span></div>
