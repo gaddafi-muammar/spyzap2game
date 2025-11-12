@@ -37,17 +37,24 @@ export default function UpsellPage() {
 
       if (!profileResponse.ok) throw new Error("Erro ao buscar perfil")
       const profile = await profileResponse.json()
+
+      console.log("[v0] Profile data received:", profile)
+
       setProfileData(profile)
 
-      if (profile.data?.biography_with_entities?.picture_url) {
+      const pictureUrl =
+        profile.data?.profile_picture_url || profile.data?.picture_url || profile.data?.user?.profile_pic_url
+
+      if (pictureUrl) {
         const imageResponse = await fetch("/api/instagram/image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl: profile.data.biography_with_entities.picture_url }),
+          body: JSON.stringify({ imageUrl: pictureUrl }),
         })
 
         if (imageResponse.ok) {
           const imageData = await imageResponse.json()
+          console.log("[v0] Image data received:", imageData)
           setProfileImage(imageData.data)
         }
       }
@@ -147,17 +154,25 @@ export default function UpsellPage() {
                       )}
                       <div className="flex-1">
                         <p className="text-green-400 font-bold text-sm mb-1">✓ Instagram Profile Detected</p>
-                        <p className="font-bold text-white text-lg">@{profileData.data?.username}</p>
+                        <p className="font-bold text-white text-lg">
+                          @{profileData.data?.username || profileData.data?.user?.username || "unknown"}
+                        </p>
                         <p className="text-gray-200 text-sm mt-1">
-                          {profileData.data?.edge_followed_by?.edges?.length || profileData.data?.follower_count || 0}{" "}
+                          {profileData.data?.follower_count ||
+                            profileData.data?.followers_count ||
+                            profileData.data?.user?.followers_count ||
+                            0}{" "}
                           followers •{" "}
-                          {profileData.data?.edge_owner_to_timeline_media?.edges?.length ||
-                            profileData.data?.media_count ||
+                          {profileData.data?.media_count ||
+                            profileData.data?.posts_count ||
+                            profileData.data?.user?.media_count ||
                             0}{" "}
                           posts
                         </p>
-                        {profileData.data?.biography && (
-                          <p className="text-gray-300 text-sm mt-2 italic">{profileData.data.biography}</p>
+                        {(profileData.data?.biography || profileData.data?.user?.biography) && (
+                          <p className="text-gray-300 text-sm mt-2 italic">
+                            {profileData.data?.biography || profileData.data?.user?.biography}
+                          </p>
                         )}
                       </div>
                     </div>

@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
+
+    console.log("[v0] Instagram API Response:", JSON.stringify(data, null, 2))
+
     return NextResponse.json({ data })
   } catch (error) {
     console.error("Instagram API error:", error)
