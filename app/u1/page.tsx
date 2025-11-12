@@ -1,12 +1,12 @@
 "use client"
+
 import type React from "react"
-import { useState } from "react"
-import Script from "next/script"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { User } from "lucide-react"
 
-// --- Funções Auxiliares do SpySystem ---
+// --- Funções Auxiliares (As suas funções estão corretas e foram mantidas) ---
 const sanitizeUsername = (username: string): string => {
   let u = (username || "").trim()
   if (u.startsWith("@")) u = u.slice(1)
@@ -40,76 +40,25 @@ const getProfileFromCache = (user: string): any | null => {
   }
   return null
 }
-// --- Fim das Funções Auxiliares ---
 
-export default function UpsellPage() {
+// --- Componente da Nova Página (Substitui UpsellPage) ---
+export default function NewUpsellPage() {
   const [instagramHandle, setInstagramHandle] = useState("")
   const [profileData, setProfileData] = useState<any>(null)
   const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(false)
   const [error, setError] = useState("")
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // --- Funções para extrair dados do objeto de perfil de forma segura ---
-  const getUsername = (profile: any) => profile?.data?.username || profile?.data?.user?.username || "desconhecido"
-  const getFollowerCount = (profile: any) =>
-    profile?.data?.follower_count || profile?.data?.followers_count || profile?.data?.user?.followers_count || 0
-  const getMediaCount = (profile: any) =>
-    profile?.data?.media_count || profile?.data?.posts_count || profile?.data?.user?.media_count || 0
-  const getBiography = (profile: any) => profile?.data?.biography || profile?.data?.user?.biography || ""
-  const getProfilePictureUrl = (profile: any) =>
-    profile?.data?.profile_picture_url || profile?.data?.picture_url || profile?.data?.user?.profile_pic_url || ""
+  // --- Funções para extrair dados do perfil de forma segura ---
+  // ATENÇÃO: A estrutura da API pode ser aninhada dentro de 'user'. Ajustei para refletir isso.
+  const getUsername = (profile: any) => profile?.data?.user?.username || "carregando..."
+  const getFollowerCount = (profile: any) => profile?.data?.user?.followers_count || 0
+  const getMediaCount = (profile: any) => profile?.data?.user?.media_count || 0
+  const getBiography = (profile: any) => profile?.data?.user?.biography || ""
+  const getProfilePictureUrl = (profile: any) => profile?.data?.user?.profile_pic_url || ""
 
-  const handleFetchInstagram = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const sanitizedUser = sanitizeUsername(instagramHandle)
-    if (!sanitizedUser) {
-      setError("Por favor, insira um @Instagram válido")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-    setProfileData(null)
-    setProfileImage(null)
-
-    const cachedProfile = getProfileFromCache(sanitizedUser)
-    if (cachedProfile) {
-      setProfileData(cachedProfile)
-      const pictureUrl = getProfilePictureUrl(cachedProfile)
-      if (pictureUrl) {
-        fetchImage(pictureUrl)
-      }
-      setLoading(false)
-      return
-    }
-
-    try {
-      const profileResponse = await fetch("/api/instagram/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: sanitizedUser }),
-      })
-
-      if (!profileResponse.ok) {
-        throw new Error("Erro ao buscar perfil. Verifique o @ e tente novamente.")
-      }
-      const profile = await profileResponse.json()
-      console.log("[v0] Dados do perfil recebidos:", profile)
-      setProfileData(profile)
-      setProfileLocalCache(sanitizedUser, profile)
-
-      const pictureUrl = getProfilePictureUrl(profile)
-      if (pictureUrl) {
-        await fetchImage(pictureUrl)
-      }
-    } catch (err: any) {
-      setError(err.message || "Erro ao buscar dados do Instagram.")
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // --- Lógica para buscar a imagem do perfil ---
   const fetchImage = async (imageUrl: string) => {
     try {
       const imageResponse = await fetch("/api/instagram/image", {
@@ -126,135 +75,132 @@ export default function UpsellPage() {
     }
   }
 
+  // --- Lógica de busca automática ao digitar ---
+  const handleInstagramChange = (value: string) => {
+    setInstagramHandle(value)
+    const sanitizedUser = sanitizeUsername(value)
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    setError("")
+    setProfileData(null)
+    setProfileImage(null)
+
+    if (sanitizedUser.length < 3) {
+      return
+    }
+
+    setLoadingProfile(true) // Mostra o loading imediatamente
+
+    debounceTimer.current = setTimeout(async () => {
+      const cachedProfile = getProfileFromCache(sanitizedUser)
+      if (cachedProfile) {
+        setProfileData(cachedProfile)
+        const picUrl = getProfilePictureUrl(cachedProfile)
+        if (picUrl) await fetchImage(picUrl)
+        setLoadingProfile(false)
+        return
+      }
+
+      try {
+        const response = await fetch("/api/instagram/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: sanitizedUser }),
+        })
+        if (!response.ok) throw new Error("Perfil não encontrado ou privado.")
+        const profile = await response.json()
+        setProfileData(profile)
+        setProfileLocalCache(sanitizedUser, profile)
+
+        const picUrl = getProfilePictureUrl(profile)
+        if (picUrl) await fetchImage(picUrl)
+      } catch (err: any) {
+        setError(err.message)
+        setProfileData(null)
+        setProfileImage(null)
+      } finally {
+        setLoadingProfile(false)
+      }
+    }, 1000) // Espera 1 segundo após o usuário parar de digitar
+  }
+
+  // Limpa o timer quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    }
+  }, [])
+
   return (
-    <>
-      <Script src="https://checkout.hotmart.com/lib/hotmart-checkout-elements.js" strategy="afterInteractive" />
-      <Script
-        id="hotmart-init"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            if (typeof checkoutElements !== 'undefined') {
-              checkoutElements.init('salesFunnel').mount('#hotmart-sales-funnel')
-            }
-          `,
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-[#1a1a2e]">
+      {/* Background com gradiente e pontos */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-red-900/40 opacity-90"></div>
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)",
+          backgroundSize: "25px 25px",
         }}
-      />
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Parabéns! Sua compra está sendo finalizada</h1>
-          </div>
+      ></div>
 
-          {/* Warning */}
-          <Card className="bg-red-50 border-red-200 mb-8 p-4">
-            <p className="text-red-700 font-semibold text-center">
-              ⚠️ Por favor, não feche esta página ou você pode perder toda a verdade.
-            </p>
-          </Card>
+      <main className="relative z-10 w-full max-w-lg mx-auto text-center space-y-10">
+        <h1 className="text-xl font-semibold text-white flex items-center justify-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-pink-400">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+            <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="2" />
+            <circle cx="12" cy="12" r="2" fill="currentColor" />
+          </svg>
+          TARGET IDENTIFICATION: Enter the target Instagram
+        </h1>
 
-          {/* Main Content */}
-          <Card className="mb-8 p-8 bg-white">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-              Você gostaria de recuperar conversas, fotos e vídeos que foram deletados do celular?
-            </h2>
-            <p className="text-gray-700 mb-4 text-center">
-              Você pode restaurar todas as mensagens deletadas, fotos e vídeos dos últimos 90 dias, dando a você acesso
-              a tudo o que estava oculto. Esta restauração é realizada usando
-              <span className="font-bold"> inteligência artificial</span>, que reconstrói arquivos contendo conteúdo
-              sensível.
-            </p>
-            <p className="text-gray-600 mb-8 text-center">
-              A recuperação de arquivos perdidos é um processo intensivo em dados, é por isso que cobramos uma pequena
-              taxa para quem deseja acesso a todos os segredos anteriormente deletados.
-            </p>
+        <div className="relative w-full max-w-sm mx-auto">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Input
+            type="text"
+            placeholder="@target_user"
+            className="w-full bg-gray-800/50 border-gray-700 text-white pl-10 h-12 text-base focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+            value={instagramHandle}
+            onChange={(e) => handleInstagramChange(e.target.value)}
+          />
+        </div>
 
-            <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">📱 Conecte seu Instagram para continuar:</h3>
-              <form onSubmit={handleFetchInstagram} className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="@seu_instagram"
-                    value={instagramHandle}
-                    onChange={(e) => setInstagramHandle(e.target.value)}
-                    disabled={loading}
-                    className="flex-1"
-                  />
-                  <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-                    {loading ? "Buscando..." : "Conectar"}
-                  </Button>
-                </div>
-              </form>
-
-              {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-
-              {profileData && (
-                <div className="mt-6 p-4 bg-[#212121] rounded-lg border-2 border-green-500 text-white">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      {profileImage && (
-                        <img
-                          src={profileImage || "/placeholder.svg"}
-                          alt="profile"
-                          className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-green-400 font-bold text-sm mb-1">Instagram Profile Detected</p>
-                        <p className="font-bold text-white text-lg">@{getUsername(profileData)}</p>
-                        <p className="text-gray-300 text-sm mt-1">
-                          {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
-                        </p>
-                        {getBiography(profileData) && (
-                          <p className="text-gray-400 text-sm mt-2 italic">"{getBiography(profileData)}"</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-green-400 text-3xl font-bold flex-shrink-0">✓</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Bonuses Section */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-blue-600 mb-4">Bônus exclusivos inclusos gratuitamente:</h3>
-              <ul className="space-y-3 text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-3 font-bold">✓</span>
+        {/* --- Card de Resultado do Perfil --- */}
+        <div className="w-full max-w-sm mx-auto h-36">
+          {loadingProfile && <p className="text-white mt-4">Buscando perfil...</p>}
+          {error && <p className="text-red-500 mt-4 font-semibold">{error}</p>}
+          
+          {profileData && (
+            <div className="p-4 bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg border-2 border-green-500 text-white animate-fade-in">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4 text-left">
+                  {profileImage ? (
+                     <img src={profileImage} alt="profile" className="w-14 h-14 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-gray-700 animate-pulse"></div>
+                  )}
                   <div>
-                    <p className="font-semibold">Recuperação com Prioridade</p>
-                    <p className="text-sm text-gray-600">
-                      Seus arquivos são processados com prioridade para resultados mais rápidos
+                    <p className="text-green-400 font-bold text-sm">Instagram Profile Detected</p>
+                    <p className="font-bold text-lg">@{getUsername(profileData)}</p>
+                    <p className="text-gray-300 text-sm">
+                      {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
                     </p>
                   </div>
-                </li>
-              </ul>
+                </div>
+                <div className="w-6 h-6 rounded-full border-2 border-green-400 flex items-center justify-center">
+                   <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                   </svg>
+                </div>
+              </div>
+              {getBiography(profileData) && (
+                <p className="text-gray-300 text-sm mt-2 text-left italic">
+                  “{getBiography(profileData)}”
+                </p>
+              )}
             </div>
-          </Card>
-
-          {/* Hotmart Widget */}
-          <div className="mb-8">
-            <div id="hotmart-sales-funnel"></div>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Clique no botão acima para receber seus arquivos restaurados.</p>
-          </div>
+          )}
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   )
 }
