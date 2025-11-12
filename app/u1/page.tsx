@@ -239,6 +239,9 @@ const renderInitialStep = () => (
         <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm"><div className="relative w-full h-56 rounded-md overflow-hidden"><img src="/images/liked-photo-3.jpeg" alt="Liked Photo 3" className="w-full h-full object-cover filter blur-sm"/><div className="absolute inset-0 flex items-center justify-center bg-black/40"><Lock size={40} className="text-white"/></div></div><div className="flex items-center gap-2 mt-2"><Heart size={16} className="text-pink-500" /><span className="text-sm text-gray-600">1.2K likes</span></div><div className="flex items-center gap-3 mt-2"><img src={profileImageUrl || ""} alt="User" className="w-8 h-8 rounded-full object-cover"/><p className="text-sm text-gray-800"><b>{instagramHandle}</b> “Wow, what a beautiful little doll🥰”</p></div></div>
         <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm"><div className="relative w-full h-56 rounded-md overflow-hidden"><img src="/images/liked-story3.jpg" alt="Liked Story 3" className="w-full h-full object-cover filter blur-sm"/><div className="absolute inset-0 flex items-center justify-center bg-black/40"><Lock size={40} className="text-white"/></div></div><div className="flex items-center gap-2 mt-2"><Heart size={16} className="text-pink-500" /><span className="text-sm text-gray-600">876 likes</span></div><div className="flex items-center gap-3 mt-2"><img src={profileImageUrl || ""} alt="User" className="w-8 h-8 rounded-full object-cover"/><p className="text-sm text-gray-800"><b>{instagramHandle}</b> "🫣😏"</p></div></div>
       </div>
+       <p className="text-center text-gray-700 font-semibold mt-8 mb-2 px-4">
+        Click the button below and unlock the full Instagram report, gain access to all conversations and liked photos
+      </p>
       <div id="hotmart-sales-funnel" className="w-full pt-4"></div>
     </div>
   );
