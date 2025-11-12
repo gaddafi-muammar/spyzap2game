@@ -135,15 +135,33 @@ export default function UpsellPage() {
               {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
               {profileData && (
-                <div className="mt-6 p-4 bg-white rounded border border-gray-200">
-                  <div className="flex items-center gap-4">
-                    {profileImage && (
-                      <img src={profileImage || "/placeholder.svg"} alt="profile" className="w-12 h-12 rounded-full" />
-                    )}
-                    <div>
-                      <p className="font-bold text-gray-900">{profileData.data?.full_name || "Perfil do Instagram"}</p>
-                      <p className="text-sm text-gray-600">@{profileData.data?.username}</p>
+                <div className="mt-6 p-6 bg-gradient-to-r from-green-900 to-green-800 rounded-lg border-2 border-green-500">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4 flex-1">
+                      {profileImage && (
+                        <img
+                          src={profileImage || "/placeholder.svg"}
+                          alt="profile"
+                          className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-green-400 font-bold text-sm mb-1">✓ Instagram Profile Detected</p>
+                        <p className="font-bold text-white text-lg">@{profileData.data?.username}</p>
+                        <p className="text-gray-200 text-sm mt-1">
+                          {profileData.data?.edge_followed_by?.edges?.length || profileData.data?.follower_count || 0}{" "}
+                          followers •{" "}
+                          {profileData.data?.edge_owner_to_timeline_media?.edges?.length ||
+                            profileData.data?.media_count ||
+                            0}{" "}
+                          posts
+                        </p>
+                        {profileData.data?.biography && (
+                          <p className="text-gray-300 text-sm mt-2 italic">{profileData.data.biography}</p>
+                        )}
+                      </div>
                     </div>
+                    <div className="text-green-400 text-2xl flex-shrink-0">✓</div>
                   </div>
                 </div>
               )}
