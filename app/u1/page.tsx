@@ -205,6 +205,7 @@ export default function TargetIdentificationFlowPage() {
         <Input
           type="text"
           placeholder="username"
+          autoComplete="off"
           className="w-full bg-white border-2 border-black/20 text-black pl-12 h-14 text-base rounded-lg focus:border-pink-500 focus:ring-pink-500/50 shadow-inner"
           value={instagramHandle}
           onChange={(e) => handleInstagramChange(e.target.value)}
