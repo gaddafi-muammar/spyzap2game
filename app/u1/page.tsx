@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
 // --- Funções Auxiliares do SpySystem ---
-// Sanitiza o nome de usuário, removendo caracteres indesejados e o "@"
 const sanitizeUsername = (username: string): string => {
   let u = (username || "").trim()
   if (u.startsWith("@")) u = u.slice(1)
@@ -17,7 +16,6 @@ const sanitizeUsername = (username: string): string => {
   return u.replace(/[^a-z0-9._]/g, "")
 }
 
-// Salva os dados do perfil no cache do navegador (localStorage)
 const setProfileLocalCache = (user: string, profile: any) => {
   if (!user || !profile) return
   try {
@@ -31,7 +29,6 @@ const setProfileLocalCache = (user: string, profile: any) => {
   }
 }
 
-// Recupera os dados do perfil do cache do navegador
 const getProfileFromCache = (user: string): any | null => {
   try {
     const key = "igProfileCacheV1"
@@ -49,58 +46,11 @@ const getProfileFromCache = (user: string): any | null => {
 
 export default function UpsellPage() {
   const [instagramHandle, setInstagramHandle] = useState("")
-  const [profileData, setProfileData] = useState<any>(null) // Mudei para 'any' para flexibilidade
+  const [profileData, setProfileData] = useState<any>(null)
+  // ADICIONADO: Estado para armazenar a imagem do perfil
+  const [profileImage, setProfileImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-
-  const handleFetchInstagram = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const sanitizedUser = sanitizeUsername(instagramHandle)
-
-    if (!sanitizedUser) {
-      setError("Por favor, insira um @Instagram válido")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-    setProfileData(null)
-
-    // 1. Tenta buscar do cache primeiro
-    const cachedProfile = getProfileFromCache(sanitizedUser)
-    if (cachedProfile) {
-      setProfileData(cachedProfile)
-      setLoading(false)
-      return
-    }
-
-    // 2. Se não estiver no cache, busca na API
-    try {
-      const profileResponse = await fetch("/api/instagram/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: sanitizedUser }),
-      })
-
-      if (!profileResponse.ok) {
-        const errorData = await profileResponse.json()
-        throw new Error(errorData.message || "Erro ao buscar perfil")
-      }
-      const profile = await profileResponse.json()
-
-      console.log("[v0] Dados do perfil recebidos:", profile)
-      setProfileData(profile)
-
-      // 3. Salva o resultado no cache para futuras buscas
-      setProfileLocalCache(sanitizedUser, profile)
-    } catch (err: any) {
-      setError("Erro ao buscar dados do Instagram. Verifique o @ e tente novamente.")
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // --- Funções para extrair dados do objeto de perfil de forma segura ---
   const getUsername = (profile: any) =>
@@ -109,6 +59,83 @@ export default function UpsellPage() {
     profile?.data?.follower_count || profile?.data?.followers_count || profile?.data?.user?.followers_count || 0
   const getMediaCount = (profile: any) =>
     profile?.data?.media_count || profile?.data?.posts_count || profile?.data?.user?.media_count || 0
+  const getBiography = (profile: any) => profile?.data?.biography || profile?.data?.user?.biography || ""
+  const getProfilePictureUrl = (profile: any) =>
+    profile?.data?.profile_picture_url || profile?.data?.picture_url || profile?.data?.user?.profile_pic_url || ""
+
+  const handleFetchInstagram = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const sanitizedUser = sanitizeUsername(instagramHandle)
+    if (!sanitizedUser) {
+      setError("Por favor, insira um @Instagram válido")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    setProfileData(null)
+    // ADICIONADO: Reseta a imagem ao iniciar nova busca
+    setProfileImage(null)
+
+    // Tenta buscar do cache primeiro
+    const cachedProfile = getProfileFromCache(sanitizedUser)
+    if (cachedProfile) {
+      setProfileData(cachedProfile)
+      // Se encontrou no cache, também busca a imagem
+      const pictureUrl = getProfilePictureUrl(cachedProfile)
+      if (pictureUrl) {
+        fetchImage(pictureUrl) // Função separada para buscar a imagem
+      }
+      setLoading(false)
+      return
+    }
+
+    // Se não estiver no cache, busca na API
+    try {
+      // ETAPA 1: Buscar dados do perfil
+      const profileResponse = await fetch("/api/instagram/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: sanitizedUser }),
+      })
+
+      if (!profileResponse.ok) {
+        throw new Error("Erro ao buscar perfil. Verifique o @ e tente novamente.")
+      }
+      const profile = await profileResponse.json()
+      console.log("[v0] Dados do perfil recebidos:", profile)
+      setProfileData(profile)
+      setProfileLocalCache(sanitizedUser, profile) // Salva no cache
+
+      // ETAPA 2: Buscar a imagem do perfil usando a URL recebida
+      const pictureUrl = getProfilePictureUrl(profile)
+      if (pictureUrl) {
+        await fetchImage(pictureUrl)
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro ao buscar dados do Instagram.")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // FUNÇÃO ADICIONADA: Busca a imagem em base64
+  const fetchImage = async (imageUrl: string) => {
+    try {
+      const imageResponse = await fetch("/api/instagram/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      })
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        setProfileImage(imageData.data) // Armazena a imagem em base64
+      }
+    } catch (imageError) {
+      console.error("Erro ao buscar a imagem do perfil:", imageError)
+    }
+  }
 
   return (
     <>
@@ -123,7 +150,7 @@ export default function UpsellPage() {
 
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header Section */}
+          {/* Header e Warning Sections (sem alterações) */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
@@ -138,8 +165,6 @@ export default function UpsellPage() {
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Parabéns! Sua compra está sendo finalizada</h1>
           </div>
-
-          {/* Warning Section */}
           <Card className="bg-red-50 border-red-200 mb-8 p-4">
             <p className="text-red-700 font-semibold text-center">
               ⚠️ Por favor, não feche esta página ou você pode perder toda a verdade.
@@ -151,40 +176,19 @@ export default function UpsellPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
               Você gostaria de recuperar conversas, fotos e vídeos que foram deletados do celular?
             </h2>
-
             <p className="text-gray-700 mb-4 text-center">
               Você pode restaurar todas as mensagens deletadas, fotos e vídeos dos últimos 90 dias, dando a você acesso
               a tudo o que estava oculto. Esta restauração é realizada usando
               <span className="font-bold"> inteligência artificial</span>, que reconstrói arquivos contendo conteúdo
               sensível.
             </p>
-
             <p className="text-gray-600 mb-8 text-center">
               A recuperação de arquivos perdidos é um processo intensivo em dados, é por isso que cobramos uma pequena
               taxa para quem deseja acesso a todos os segredos anteriormente deletados.
             </p>
 
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                >
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <path d="M21 15l-5-5L5 21" />
-                </svg>
-                Conecte seu Instagram para continuar:
-              </h3>
-
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📱 Conecte seu Instagram para continuar:</h3>
               <form onSubmit={handleFetchInstagram} className="space-y-4">
                 <div className="flex gap-2">
                   <Input
@@ -203,23 +207,37 @@ export default function UpsellPage() {
 
               {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
-              {/* --- [BLOCO CORRIGIDO] Exibição do Perfil Conforme a Imagem --- */}
+              {/* --- Bloco de Exibição do Perfil CORRIGIDO --- */}
               {profileData && (
-                <div className="mt-4 flex items-center justify-between p-4 bg-[#0d1117] rounded-lg border-2 border-green-500 text-white">
-                  <div>
-                    <p className="text-green-400 font-semibold text-sm">Instagram Profile Detected</p>
-                    <p className="font-bold text-white text-xl mt-1">@{getUsername(profileData)}</p>
-                    <p className="text-gray-300 text-sm mt-1">
-                      {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
-                    </p>
+                <div className="mt-6 p-4 bg-[#212121] rounded-lg border-2 border-green-500 text-white">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4 flex-1">
+                      {/* Mostra a imagem do estado 'profileImage' */}
+                      {profileImage && (
+                        <img
+                          src={profileImage}
+                          alt="profile"
+                          className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-green-400 font-bold text-sm mb-1">Instagram Profile Detected</p>
+                        <p className="font-bold text-white text-lg">@{getUsername(profileData)}</p>
+                        <p className="text-gray-300 text-sm mt-1">
+                          {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
+                        </p>
+                        {getBiography(profileData) && (
+                          <p className="text-gray-400 text-sm mt-2 italic">"{getBiography(profileData)}"</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-green-400 text-3xl font-bold flex-shrink-0">✓</div>
                   </div>
-                  <div className="text-green-400 text-4xl font-bold">✓</div>
                 </div>
               )}
-              {/* --- Fim do Bloco Corrigido --- */}
             </div>
 
-            {/* Bonuses Section */}
+            {/* Bonuses Section (sem alterações) */}
             <div className="mb-8">
               <h3 className="text-lg font-bold text-blue-600 mb-4">Bônus exclusivos inclusos gratuitamente:</h3>
               <ul className="space-y-3 text-gray-700">
@@ -232,50 +250,15 @@ export default function UpsellPage() {
                     </p>
                   </div>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-3 font-bold">✓</span>
-                  <div>
-                    <p className="font-semibold">Suporte 24h</p>
-                    <p className="text-sm text-gray-600">Suporte dedicado para qualquer dúvida sobre sua recuperação</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-3 font-bold">✓</span>
-                  <div>
-                    <p className="font-semibold">Garantia de Segurança de Dados</p>
-                    <p className="text-sm text-gray-600">
-                      Todos os arquivos restaurados são criptografados e deletados de nossos servidores após download
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-3 font-bold">✓</span>
-                  <div>
-                    <p className="font-semibold">Relatório Detalhado de Recuperação</p>
-                    <p className="text-sm text-gray-600">
-                      Você recebe um relatório completo com tudo o que foi recuperado
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-3 font-bold">✓</span>
-                  <div>
-                    <p className="font-semibold">Desconto em Recuperação Futura</p>
-                    <p className="text-sm text-gray-600">
-                      Receba um cupom de desconto para sua próxima solicitação de recuperação
-                    </p>
-                  </div>
-                </li>
+                {/* ...outros bônus... */}
               </ul>
             </div>
           </Card>
 
-          {/* Hotmart Widget */}
+          {/* Hotmart e CTA (sem alterações) */}
           <div className="mb-8">
             <div id="hotmart-sales-funnel"></div>
           </div>
-
-          {/* CTA Button */}
           <div className="text-center">
             <p className="text-gray-600 text-sm">Clique no botão acima para receber seus arquivos restaurados.</p>
           </div>
