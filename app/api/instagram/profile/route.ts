@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        "X-RapidAPI-Key": "663753efb4mshcbbdde11e811789p149069jsnd73bd1ba7a71",
+        "X-RapidAPI-Key": process.env.INSTAGRAM_RAPIDAPI_KEY || "",
         "X-RapidAPI-Host": "instagram-scraper-api2.p.rapidapi.com",
       },
       signal: AbortSignal.timeout?.(10_000),
