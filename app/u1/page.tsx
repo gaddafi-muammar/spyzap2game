@@ -1,9 +1,9 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
-import { User, CheckCircle } from "lucide-react"
+import { User } from "lucide-react"
 
-// --- Funções Auxiliares ---
+// --- Suas funções auxiliares (mantidas) ---
 const sanitizeUsername = (username: string): string => {
   let u = (username || "").trim()
   if (u.startsWith("@")) u = u.slice(1)
@@ -16,6 +16,7 @@ const setProfileLocalCache = (user: string, profile: any) => {
   try {
     const key = "igProfileCacheV1"
     const cache = JSON.parse(localStorage.getItem(key) || "{}") || {}
+    // Armazena o objeto 'profile' diretamente
     cache[user] = { profile, ts: Date.now() }
     localStorage.setItem(key, JSON.stringify(cache))
   } catch (e) {
@@ -36,43 +37,17 @@ const getProfileFromCache = (user: string): any | null => {
   return null
 }
 
-// --- Componente da Página (Versão Final) ---
-export default function TargetIdentificationPage() {
-  const [step, setStep] = useState(1) // Added step management for multi-step flow
+// --- Componente da Página com Design e Lógica Corrigidos ---
+export default function TargetIdentificationPageV2() {
   const [instagramHandle, setInstagramHandle] = useState("")
   const [profileData, setProfileData] = useState<any>(null)
-  const [profileImage, setProfileImage] = useState<string | null>(null)
+  // [CORREÇÃO 1] Armazenaremos a URL do proxy, não a imagem em base64
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [loadingProgress, setLoadingProgress] = useState(0) // Added loading progress
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // --- [CORREÇÃO APLICADA AQUI] ---
-  // Removido o ".user" extra para corresponder à estrutura da sua API.
-  const getUsername = (profile: any) => profile?.data?.username || "desconhecido"
-  const getFollowerCount = (profile: any) => profile?.data?.follower_count || 0
-  const getMediaCount = (profile: any) => profile?.data?.media_count || 0
-  const getBiography = (profile: any) => profile?.data?.biography || ""
-  const getProfilePictureUrl = (profile: any) => profile?.data?.profile_picture_url || ""
-
-  // --- Lógica para buscar a imagem do perfil ---
-  const fetchImage = async (imageUrl: string) => {
-    try {
-      const response = await fetch("/api/instagram/image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl }),
-      })
-      if (response.ok) {
-        const imageData = await response.json()
-        setProfileImage(imageData.data)
-      }
-    } catch (e) {
-      console.error("Erro ao buscar imagem do perfil:", e)
-    }
-  }
-
-  // --- Lógica de busca automática ao digitar ---
+  // --- Lógica de busca automática ---
   const handleInstagramChange = (value: string) => {
     setInstagramHandle(value)
     const sanitizedUser = sanitizeUsername(value)
@@ -80,8 +55,7 @@ export default function TargetIdentificationPage() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
     setError("")
     setProfileData(null)
-    setProfileImage(null)
-    setStep(1) // Reseta para a primeira etapa ao digitar novo @
+    setProfileImageUrl(null)
 
     if (sanitizedUser.length < 3) {
       setIsLoading(false)
@@ -94,8 +68,10 @@ export default function TargetIdentificationPage() {
       const cachedProfile = getProfileFromCache(sanitizedUser)
       if (cachedProfile) {
         setProfileData(cachedProfile)
-        const picUrl = getProfilePictureUrl(cachedProfile)
-        if (picUrl) await fetchImage(picUrl)
+        if (cachedProfile.profile_pic_url) {
+          const proxyUrl = `/api/instagram/image?url=${encodeURIComponent(cachedProfile.profile_pic_url)}`
+          setProfileImageUrl(proxyUrl)
+        }
         setIsLoading(false)
         return
       }
@@ -106,12 +82,23 @@ export default function TargetIdentificationPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username: sanitizedUser }),
         })
-        if (!response.ok) throw new Error("Perfil não encontrado ou privado.")
-        const profile = await response.json()
+        const result = await response.json()
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Perfil não encontrado ou privado.")
+        }
+        
+        // [CORREÇÃO 2] Acessa os dados de 'result.profile'
+        const profile = result.profile
         setProfileData(profile)
         setProfileLocalCache(sanitizedUser, profile)
-        const picUrl = getProfilePictureUrl(profile)
-        if (picUrl) await fetchImage(picUrl)
+
+        // [CORREÇÃO 3] Cria a URL do proxy para o <img>
+        if (profile.profile_pic_url) {
+          const proxyUrl = `/api/instagram/image?url=${encodeURIComponent(profile.profile_pic_url)}`
+          setProfileImageUrl(proxyUrl)
+        }
+
       } catch (err: any) {
         setError(err.message)
         setProfileData(null)
@@ -120,228 +107,90 @@ export default function TargetIdentificationPage() {
       }
     }, 1200)
   }
-
-  const handleContinueClick = () => {
-    setStep(2)
-    setLoadingProgress(0)
-
-    // Simulate loading progress
-    const interval = setInterval(() => {
-      setLoadingProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval)
-          return prev
-        }
-        return prev + Math.random() * 30
-      })
-    }, 300)
-
-    // Complete loading after 3 seconds
-    setTimeout(() => {
-      setLoadingProgress(100)
-      setTimeout(() => {
-        setStep(3)
-      }, 500)
-    }, 3000)
-  }
-
-  useEffect(
-    () => () => {
+  
+  useEffect(() => () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current)
-    },
-    [],
-  )
-    
-  // --- Funções de Renderização dos Passos ---
+    }, [])
 
-  const renderProfileCard = () => (
-    <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-pink-500 text-black animate-fade-in">
+  const renderLoadingCard = () => (
+    <div className="p-4 bg-pink-50 rounded-lg border-2 border-pink-400 animate-pulse">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-left">
-          {profileImage ? (
-            <img
-              src={profileImage}
-              alt="profile"
-              className="w-16 h-16 rounded-full object-cover border-2 border-pink-500"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-300 border-2 border-pink-500 animate-pulse"></div>
-          )}
+          <div className="w-14 h-14 rounded-full bg-pink-200"></div>
           <div>
             <p className="text-pink-600 font-bold text-sm">✓ Instagram Profile Detected</p>
-            <p className="font-bold text-lg text-black">@{getUsername(profileData)}</p>
-            <p className="text-gray-700 text-sm">
-              {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
-            </p>
-            {getBiography(profileData) && (
-              <p className="text-gray-600 text-xs mt-1 italic">{getBiography(profileData)}</p>
-            )}
+            <p className="font-bold text-lg text-black">@desconhecido</p>
+            <p className="text-gray-600 text-sm">0 posts • 0 followers</p>
           </div>
         </div>
-        <div className="w-6 h-6 rounded-full border-2 border-pink-500 flex items-center justify-center bg-pink-500">
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
+        <div className="w-7 h-7 rounded-full bg-pink-500 flex items-center justify-center opacity-50">
+           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
         </div>
       </div>
     </div>
-  )
+  );
 
-  const renderLoadingStep = () => (
-    <div className="flex flex-col items-center justify-center space-y-8 animate-fade-in">
-      <h2 className="text-2xl font-bold text-black">Analyzing Profile...</h2>
-
-      {renderProfileCard()}
-
-      <div className="w-full space-y-4">
-        <div className="text-sm text-gray-700 font-mono">
-          <p className="text-yellow-600 font-bold">[SCANNING]</p>
-          <p className="text-black">
-            Cross-referencing encrypted public and private databases... ({Math.floor(loadingProgress)}%)
-          </p>
+  const renderProfileCard = () => (
+    <div className="p-4 bg-pink-50 rounded-lg border-2 border-pink-400 text-black animate-fade-in">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-left">
+                {profileImageUrl ? (
+                    <img src={profileImageUrl} alt="profile" className="w-14 h-14 rounded-full object-cover" />
+                ) : (
+                    <div className="w-14 h-14 rounded-full bg-gray-300"></div>
+                )}
+                <div>
+                    <p className="text-pink-600 font-bold text-sm">✓ Instagram Profile Detected</p>
+                    {/* Acessa os dados diretamente do objeto 'profileData' */}
+                    <p className="font-bold text-lg text-black">@{profileData.username}</p>
+                    <p className="text-gray-600 text-sm">{profileData.media_count} posts • {profileData.follower_count} followers</p>
+                </div>
+            </div>
+            <div className="w-7 h-7 rounded-full bg-pink-500 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+            </div>
         </div>
-
-        <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-pink-500 to-purple-600 transition-all duration-300"
-            style={{ width: `${loadingProgress}%` }}
-          />
-        </div>
-
-        <div className="text-sm text-gray-700 font-mono">
-          <p className="text-blue-600 font-bold">[STATUS]</p>
-          <p className="text-black">Searching for connected accounts...</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 w-full">
-        {[...Array(9)].map((_, i) => (
-          <div
-            key={i}
-            className="aspect-square bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg animate-pulse"
-            style={{ animationDelay: `${i * 100}ms` }}
-          />
-        ))}
-      </div>
-
-      <button
-        className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition-all opacity-70 cursor-not-allowed"
-        disabled
-      >
-        ANALYZING...
-      </button>
     </div>
-  )
-
-  const renderResultsStep = () => (
-    <div className="flex flex-col items-center justify-center space-y-6 animate-fade-in">
-      <div className="flex items-center gap-2 text-green-600 font-bold text-xl">
-        <CheckCircle size={24} />
-        Analysis Complete
-      </div>
-
-      {renderProfileCard()}
-
-      <div className="w-full space-y-4 text-left">
-        <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded text-black">
-          <p className="font-bold text-green-700">✓ Instagram account found</p>
-          <p className="text-sm text-gray-700">Last access: 3h ago</p>
-        </div>
-
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded text-black">
-          <p className="font-bold text-red-700">🔴 Hidden Tinder profile detected</p>
-        </div>
-
-        <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded text-black">
-          <p className="font-bold text-blue-700">💬 Private messages found</p>
-        </div>
-      </div>
-
-      <button
-        onClick={() => {
-            setStep(1)
-            setInstagramHandle("")
-            setProfileData(null)
-            setProfileImage(null)
-        }}
-        className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition-all w-full"
-      >
-        Search Another Profile
-      </button>
-    </div>
-  )
+);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 bg-white">
-      <main className="relative z-10 w-full max-w-lg mx-auto text-center space-y-8">
-        {step === 1 && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex items-center justify-center gap-2">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="text-pink-500"
-              >
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="2" fill="currentColor" />
-              </svg>
-              <h1 className="text-2xl font-bold text-black">TARGET IDENTIFICATION</h1>
+      <main className="relative z-10 w-full max-w-md mx-auto text-center space-y-8">
+        <div className="space-y-2">
+            <div className="flex items-center justify-center gap-3">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-pink-500">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="12" r="2" fill="currentColor" />
+                </svg>
+                <h1 className="text-2xl font-bold text-black tracking-wide">TARGET IDENTIFICATION</h1>
             </div>
-            <p className="text-gray-700">Enter the target Instagram to begin</p>
-          </div>
-        )}
+            <p className="text-gray-600">Enter the target Instagram to begin</p>
+        </div>
 
-        {step === 1 && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="relative w-full">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <Input
-                type="text"
-                placeholder="@target_user"
-                className="w-full bg-white border-2 border-gray-300 text-black pl-12 h-12 text-base rounded-lg focus:border-pink-500 focus:ring-pink-500/50"
-                value={instagramHandle}
-                onChange={(e) => handleInstagramChange(e.target.value)}
-              />
-            </div>
+        <div className="relative w-full">
+          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Input
+            type="text"
+            placeholder="madsonhenry"
+            className="w-full bg-white border-2 border-black/20 text-black pl-12 h-14 text-base rounded-lg focus:border-pink-500 focus:ring-pink-500/50 shadow-inner"
+            value={instagramHandle}
+            onChange={(e) => handleInstagramChange(e.target.value)}
+          />
+        </div>
 
-            <div className="w-full min-h-[120px]">
-              {isLoading && (
-                <div className="p-4 bg-gray-100 rounded-lg border-2 border-gray-300 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-gray-300" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-4 bg-gray-400 rounded w-3/4" />
-                      <div className="h-3 bg-gray-400 rounded w-1/2" />
-                      <div className="h-3 bg-gray-400 rounded w-5/6" />
-                    </div>
-                  </div>
-                </div>
-              )}
-              {!isLoading && error && <p className="text-red-600 font-semibold">{error}</p>}
-              {!isLoading && profileData && renderProfileCard()}
-            </div>
+        <div className="w-full min-h-[96px]">
+          {isLoading && renderLoadingCard()}
+          {!isLoading && error && <p className="text-red-600 font-semibold">{error}</p>}
+          {!isLoading && profileData && renderProfileCard()}
+        </div>
 
-            {profileData && !isLoading && (
-              <button
-                onClick={handleContinueClick}
-                className="w-full px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-lg rounded-lg hover:shadow-lg transition-all"
-              >
-                ➜ CONTINUE
-              </button>
-            )}
-          </div>
-        )}
-
-        {step === 2 && renderLoadingStep()}
-        {step === 3 && renderResultsStep()}
+        <button
+            disabled={!profileData || isLoading}
+            className="w-full py-4 text-lg font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+        >
+            ➜ CONTINUE..
+        </button>
       </main>
     </div>
   )
