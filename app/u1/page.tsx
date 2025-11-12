@@ -192,7 +192,7 @@ const renderProfileCard = (profile: any) => (
         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <Input
           type="text"
-          placeholder="madsonhenry"
+          placeholder="username"
           className="w-full bg-white border-2 border-black/20 text-black pl-12 h-14 text-base rounded-lg focus:border-pink-500 focus:ring-pink-500/50 shadow-inner"
           value={instagramHandle}
           onChange={(e) => handleInstagramChange(e.target.value)}
@@ -230,6 +230,7 @@ const renderProfileCard = (profile: any) => (
   );
 
   // >>> SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA <<<
+
 const renderResultsStep = () => (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-center gap-2 text-green-600 font-bold text-xl">
@@ -246,7 +247,7 @@ const renderResultsStep = () => (
           <p className="ml-4"><span className="text-blue-600">[INSTAGRAM]</span> New message from @izes.</p>
       </div>
 
-      {/* Notificações (Estilo Adaptado) */}
+      {/* --- SEÇÃO DE NOTIFICAÇÕES ATUALIZADA --- */}
       <div className="space-y-3 text-left">
         {/* Notificação 1: Curtida */}
         <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -258,7 +259,17 @@ const renderResultsStep = () => (
             <Heart className="text-pink-500" size={18} />
         </div>
 
-        {/* Notificação 2: Mensagem */}
+        {/* Notificação 2: Curtida */}
+        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <img src="/images/female-placeholder-1.jpeg" alt="User Avatar" className="w-10 h-10 rounded-full object-cover"/>
+            <div className="flex-1 text-sm">
+                <p className="text-gray-800"><span className="font-semibold">@alexia_30</span> liked your photo</p>
+                <p className="text-gray-500 text-xs">2 minutes ago</p>
+            </div>
+            <Heart className="text-pink-500" size={18} />
+        </div>
+
+        {/* Notificação 3: Mensagem */}
         <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
             <img src="/images/female-placeholder-2.jpeg" alt="Message Avatar" className="w-10 h-10 rounded-full object-cover"/>
             <div className="flex-1 text-sm">
@@ -266,6 +277,26 @@ const renderResultsStep = () => (
                 <p className="text-gray-500 text-xs">5 minutes ago</p>
             </div>
             <MessageCircle className="text-blue-500" size={18} />
+        </div>
+
+        {/* [NOVO] Notificação 4: Está digitando... */}
+        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <img src={profileImageUrl || ""} alt="Target Avatar" className="w-10 h-10 rounded-full object-cover"/>
+            <div className="flex-1 text-sm">
+                <p className="text-gray-800"><span className="font-semibold">{instagramHandle}</span> is typing...</p>
+                <p className="text-gray-500 text-xs">Just now</p>
+            </div>
+            <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse ml-auto"></span>
+        </div>
+
+        {/* [NOVO] Notificação 5: Enviou nova mensagem */}
+        <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <img src={profileImageUrl || ""} alt="Target Avatar" className="w-10 h-10 rounded-full object-cover"/>
+            <div className="flex-1 text-sm">
+                <p className="text-gray-800"><span className="font-semibold">{instagramHandle}</span> sent a new message.</p>
+                <p className="text-gray-500 text-xs">1 minute ago</p>
+            </div>
+            <MessageCircle className="text-blue-500 ml-auto" size={18} />
         </div>
       </div>
       
