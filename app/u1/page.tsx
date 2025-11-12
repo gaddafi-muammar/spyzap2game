@@ -8,63 +8,110 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
+// --- Funções Auxiliares do SpySystem ---
+// Sanitiza o nome de usuário, removendo caracteres indesejados e o "@"
+const sanitizeUsername = (username: string): string => {
+  let u = (username || "").trim()
+  if (u.startsWith("@")) u = u.slice(1)
+  u = u.toLowerCase()
+  return u.replace(/[^a-z0-9._]/g, "")
+}
+
+// Salva os dados do perfil no cache do navegador (localStorage)
+const setProfileLocalCache = (user: string, profile: any) => {
+  if (!user || !profile) return
+  try {
+    const key = "igProfileCacheV1"
+    const cache = JSON.parse(localStorage.getItem(key) || "{}") || {}
+    cache[user] = { profile, ts: Date.now() }
+    localStorage.setItem(key, JSON.stringify(cache))
+    console.log("[v0] Perfil do Instagram salvo em cache para:", user)
+  } catch (e) {
+    console.error("[v0] Erro ao salvar perfil no cache:", e)
+  }
+}
+
+// Recupera os dados do perfil do cache do navegador
+const getProfileFromCache = (user: string): any | null => {
+  try {
+    const key = "igProfileCacheV1"
+    const cache = JSON.parse(localStorage.getItem(key) || "{}") || {}
+    if (cache[user] && cache[user].profile) {
+      console.log("[v0] Perfil encontrado no cache para:", user)
+      return cache[user].profile
+    }
+  } catch (e) {
+    console.error("[v0] Erro ao ler o cache do perfil:", e)
+  }
+  return null
+}
+// --- Fim das Funções Auxiliares ---
+
 export default function UpsellPage() {
   const [instagramHandle, setInstagramHandle] = useState("")
-  const [profileData, setProfileData] = useState(null)
-  const [profileImage, setProfileImage] = useState(null)
+  const [profileData, setProfileData] = useState<any>(null) // Mudei para 'any' para flexibilidade
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   const handleFetchInstagram = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!instagramHandle.trim()) {
-      setError("Por favor, insira um @Instagram")
+    const sanitizedUser = sanitizeUsername(instagramHandle)
+
+    if (!sanitizedUser) {
+      setError("Por favor, insira um @Instagram válido")
       return
     }
 
     setLoading(true)
     setError("")
     setProfileData(null)
-    setProfileImage(null)
 
+    // 1. Tenta buscar do cache primeiro
+    const cachedProfile = getProfileFromCache(sanitizedUser)
+    if (cachedProfile) {
+      setProfileData(cachedProfile)
+      setLoading(false)
+      return
+    }
+
+    // 2. Se não estiver no cache, busca na API
     try {
       const profileResponse = await fetch("/api/instagram/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: instagramHandle.replace("@", "") }),
+        body: JSON.stringify({ username: sanitizedUser }),
       })
 
-      if (!profileResponse.ok) throw new Error("Erro ao buscar perfil")
+      if (!profileResponse.ok) {
+        const errorData = await profileResponse.json()
+        throw new Error(errorData.message || "Erro ao buscar perfil")
+      }
       const profile = await profileResponse.json()
 
-      console.log("[v0] Profile data received:", profile)
-
+      console.log("[v0] Dados do perfil recebidos:", profile)
       setProfileData(profile)
 
-      const pictureUrl =
-        profile.data?.profile_picture_url || profile.data?.picture_url || profile.data?.user?.profile_pic_url
-
-      if (pictureUrl) {
-        const imageResponse = await fetch("/api/instagram/image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl: pictureUrl }),
-        })
-
-        if (imageResponse.ok) {
-          const imageData = await imageResponse.json()
-          console.log("[v0] Image data received:", imageData)
-          setProfileImage(imageData.data)
-        }
-      }
-    } catch (err) {
-      setError("Erro ao buscar dados do Instagram. Tente novamente.")
+      // 3. Salva o resultado no cache para futuras buscas
+      setProfileLocalCache(sanitizedUser, profile)
+    } catch (err: any) {
+      setError("Erro ao buscar dados do Instagram. Verifique o @ e tente novamente.")
       console.error(err)
     } finally {
       setLoading(false)
     }
   }
+
+  // --- Funções para extrair dados do objeto de perfil de forma segura ---
+  const getUsername = (profile: any) =>
+    profile?.data?.username || profile?.data?.user?.username || "desconhecido"
+  const getFollowerCount = (profile: any) =>
+    profile?.data?.follower_count || profile?.data?.followers_count || profile?.data?.user?.followers_count || 0
+  const getMediaCount = (profile: any) =>
+    profile?.data?.media_count || profile?.data?.posts_count || profile?.data?.user?.media_count || 0
+  const getBiography = (profile: any) => profile?.data?.biography || profile?.data?.user?.biography || ""
+  const getProfilePictureUrl = (profile: any) =>
+    profile?.data?.profile_picture_url || profile?.data?.picture_url || profile?.data?.user?.profile_pic_url || ""
 
   return (
     <>
@@ -141,45 +188,34 @@ export default function UpsellPage() {
 
               {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
+              {/* --- Bloco de Exibição do Perfil Atualizado --- */}
               {profileData && (
-                <div className="mt-6 p-6 bg-gradient-to-r from-green-900 to-green-800 rounded-lg border-2 border-green-500">
+                <div className="mt-6 p-4 bg-gray-900 rounded-lg border-2 border-green-500 text-white">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4 flex-1">
-                      {profileImage && (
+                      {getProfilePictureUrl(profileData) && (
                         <img
-                          src={profileImage || "/placeholder.svg"}
+                          src={getProfilePictureUrl(profileData)}
                           alt="profile"
-                          className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                          className="w-14 h-14 rounded-full object-cover flex-shrink-0"
                         />
                       )}
                       <div className="flex-1">
-                        <p className="text-green-400 font-bold text-sm mb-1">✓ Instagram Profile Detected</p>
-                        <p className="font-bold text-white text-lg">
-                          @{profileData.data?.username || profileData.data?.user?.username || "unknown"}
+                        <p className="text-green-400 font-bold text-sm mb-1">Instagram Profile Detected</p>
+                        <p className="font-bold text-white text-lg">@{getUsername(profileData)}</p>
+                        <p className="text-gray-300 text-sm mt-1">
+                          {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
                         </p>
-                        <p className="text-gray-200 text-sm mt-1">
-                          {profileData.data?.follower_count ||
-                            profileData.data?.followers_count ||
-                            profileData.data?.user?.followers_count ||
-                            0}{" "}
-                          followers •{" "}
-                          {profileData.data?.media_count ||
-                            profileData.data?.posts_count ||
-                            profileData.data?.user?.media_count ||
-                            0}{" "}
-                          posts
-                        </p>
-                        {(profileData.data?.biography || profileData.data?.user?.biography) && (
-                          <p className="text-gray-300 text-sm mt-2 italic">
-                            {profileData.data?.biography || profileData.data?.user?.biography}
-                          </p>
+                        {getBiography(profileData) && (
+                          <p className="text-gray-400 text-sm mt-2 italic">"{getBiography(profileData)}"</p>
                         )}
                       </div>
                     </div>
-                    <div className="text-green-400 text-2xl flex-shrink-0">✓</div>
+                    <div className="text-green-400 text-3xl font-bold flex-shrink-0">✓</div>
                   </div>
                 </div>
               )}
+              {/* --- Fim do Bloco de Exibição --- */}
             </div>
 
             {/* Bonuses Section */}
