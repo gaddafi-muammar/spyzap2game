@@ -39,7 +39,11 @@ const getProfileFromCache = (user: string): any | null => {
 // --- Componente da Página com Fluxo Completo ---
 export default function TargetIdentificationFlowPage() {
   const [step, setStep] = useState(1) 
+  
+  // --- [CORREÇÃO APLICADA AQUI] ---
+  // Garante que o estado inicial é uma string vazia (""), sem espaços.
   const [instagramHandle, setInstagramHandle] = useState("")
+  
   const [profileData, setProfileData] = useState<any>(null)
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -133,35 +137,54 @@ export default function TargetIdentificationFlowPage() {
   }, [])
 
   const renderProfileCard = (profile: any) => (
-    <div className="p-4 rounded-lg border-2 border-pink-400 text-black animate-fade-in bg-pink-50">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-left">
-                {profileImageUrl ? (
-                    <img src={profileImageUrl} alt="profile" className="w-14 h-14 rounded-full object-cover" />
-                ) : (
-                    <div className="w-14 h-14 rounded-full bg-pink-200 animate-pulse"></div>
-                )}
-                <div>
-                    <p className="text-pink-600 font-bold text-sm">✓ Instagram Profile Detected</p>
-                    <p className="font-bold text-lg text-black">@{profile.username}</p>
-                    <p className="text-gray-600 text-sm">{profile.media_count} posts • {profile.follower_count} followers</p>
-                </div>
-            </div>
-            <div className="w-7 h-7 rounded-full bg-pink-500 flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+    <div
+        className="p-4 rounded-lg border-2 border-green-500/50 text-white animate-fade-in relative overflow-hidden"
+        style={{
+        backgroundColor: "rgba(26, 44, 36, 0.9)",
+        backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)",
+        backgroundSize: "15px 15px",
+        }}
+    >
+        <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4 text-left">
+            {profileImageUrl ? (
+            <img
+                src={profileImageUrl}
+                alt="profile"
+                className="w-14 h-14 rounded-full object-cover filter grayscale"
+            />
+            ) : (
+            <div className="w-14 h-14 rounded-full bg-gray-700 animate-pulse"></div>
+            )}
+            <div>
+            <p className="text-green-400 font-bold text-sm">Instagram Profile Detected</p>
+            <p className="font-bold text-lg text-white">@{profile.username}</p>
+            <p className="text-gray-400 text-sm">
+                {profile.media_count} posts • {profile.follower_count} followers
+            </p>
             </div>
         </div>
+        <div className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+            <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+            />
+            </svg>
+        </div>
+        </div>
+        {profile.biography && (
+        <div className="border-t border-green-500/20 mt-3 pt-3 text-left">
+            <p className="text-gray-300 text-sm">{profile.biography}</p>
+        </div>
+        )}
     </div>
   );
 
-// >>> SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA <<<
-
-const renderInitialStep = () => (
+  const renderInitialStep = () => (
     <>
-      {/* Container principal da etapa inicial, com espaçamento ajustado */}
       <div className="space-y-6">
-
-        {/* --- [NOVO] Bloco de Texto Adicionado --- */}
         <div className="text-center space-y-2">
             <p className="text-lg text-gray-800">
                 <span className="font-bold text-red-600">ATTENTION!</span> Our system has identified that many of the new numbers saved on WhatsApp came directly from Instagram.
@@ -170,14 +193,13 @@ const renderInitialStep = () => (
                 Enter the @Instagram username below and perform a quick search.
             </p>
         </div>
-        {/* --- Fim do Bloco --- */}
 
         <div className="flex items-center justify-center gap-3">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-pink-500"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" /><circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="1.5" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg>
           <h1 className="text-2xl font-bold text-black tracking-wide">TARGET IDENTIFICATION</h1>
         </div>
       </div>
-
+      
       <div className="relative w-full">
         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <Input
@@ -188,7 +210,7 @@ const renderInitialStep = () => (
           onChange={(e) => handleInstagramChange(e.target.value)}
         />
       </div>
-      <div className="w-full min-h-[96px]">
+      <div className="w-full min-h-[140px]">
         {isLoading && (
             <div className="p-4 bg-pink-50 rounded-lg border-2 border-pink-400 animate-pulse">
                 <div className="flex items-center gap-4"><div className="w-14 h-14 rounded-full bg-pink-200"></div><div className="flex-1 space-y-2"><div className="h-4 bg-pink-200 rounded w-3/4"></div><div className="h-3 bg-pink-200 rounded w-1/2"></div></div></div>
@@ -249,16 +271,11 @@ const renderInitialStep = () => (
   return (
     <>
       <Script src="https://checkout.hotmart.com/lib/hotmart-checkout-elements.js" strategy="afterInteractive" />
-      
-      {/* Container principal da página */}
-      <div className="relative min-h-screen flex items-center justify-center p-4 bg-white pt-12"> {/* pt-12 para dar espaço ao header */}
-        
-        {/* --- [HEADER ADICIONADO AQUI] --- */}
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-white pt-12">
         <div className="absolute top-0 left-0 w-full bg-red-600 text-white text-center p-2 font-bold text-sm shadow-lg z-20">
             <span>Attention: do not close this page, </span>
             <span className="text-yellow-300">Your payment is still being processed.</span>
         </div>
-
         <main className="relative z-10 w-full max-w-md mx-auto text-center space-y-8">
           {step === 1 && renderInitialStep()}
           {step === 2 && renderLoadingStep()}
