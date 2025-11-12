@@ -109,9 +109,6 @@ export default function UpsellPage() {
     profile?.data?.follower_count || profile?.data?.followers_count || profile?.data?.user?.followers_count || 0
   const getMediaCount = (profile: any) =>
     profile?.data?.media_count || profile?.data?.posts_count || profile?.data?.user?.media_count || 0
-  const getBiography = (profile: any) => profile?.data?.biography || profile?.data?.user?.biography || ""
-  const getProfilePictureUrl = (profile: any) =>
-    profile?.data?.profile_picture_url || profile?.data?.picture_url || profile?.data?.user?.profile_pic_url || ""
 
   return (
     <>
@@ -168,7 +165,25 @@ export default function UpsellPage() {
             </p>
 
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">📱 Conecte seu Instagram para continuar:</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+                Conecte seu Instagram para continuar:
+              </h3>
 
               <form onSubmit={handleFetchInstagram} className="space-y-4">
                 <div className="flex gap-2">
@@ -188,34 +203,20 @@ export default function UpsellPage() {
 
               {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
-              {/* --- Bloco de Exibição do Perfil Atualizado --- */}
+              {/* --- [BLOCO CORRIGIDO] Exibição do Perfil Conforme a Imagem --- */}
               {profileData && (
-                <div className="mt-6 p-4 bg-gray-900 rounded-lg border-2 border-green-500 text-white">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      {getProfilePictureUrl(profileData) && (
-                        <img
-                          src={getProfilePictureUrl(profileData)}
-                          alt="profile"
-                          className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-green-400 font-bold text-sm mb-1">Instagram Profile Detected</p>
-                        <p className="font-bold text-white text-lg">@{getUsername(profileData)}</p>
-                        <p className="text-gray-300 text-sm mt-1">
-                          {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
-                        </p>
-                        {getBiography(profileData) && (
-                          <p className="text-gray-400 text-sm mt-2 italic">"{getBiography(profileData)}"</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-green-400 text-3xl font-bold flex-shrink-0">✓</div>
+                <div className="mt-4 flex items-center justify-between p-4 bg-[#0d1117] rounded-lg border-2 border-green-500 text-white">
+                  <div>
+                    <p className="text-green-400 font-semibold text-sm">Instagram Profile Detected</p>
+                    <p className="font-bold text-white text-xl mt-1">@{getUsername(profileData)}</p>
+                    <p className="text-gray-300 text-sm mt-1">
+                      {getMediaCount(profileData)} posts • {getFollowerCount(profileData)} followers
+                    </p>
                   </div>
+                  <div className="text-green-400 text-4xl font-bold">✓</div>
                 </div>
               )}
-              {/* --- Fim do Bloco de Exibição --- */}
+              {/* --- Fim do Bloco Corrigido --- */}
             </div>
 
             {/* Bonuses Section */}
