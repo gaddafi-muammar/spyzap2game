@@ -1,72 +1,141 @@
-// app/api/whatsapp-photo/route.ts
-
 import { type NextRequest, NextResponse } from "next/server"
 
-// Constantes de configuração da API para fácil manutenção
-const API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
-const API_HOST = "whatsapp-data.p.rapidapi.com";
-const FALLBACK_PHOTO_URL = "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=";
+// Cache para armazenar resultados por 5 minutos
+const cache = new Map<string, { result: string; timestamp: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
 export async function POST(request: NextRequest) {
+  // --- CORREÇÃO 1: LER A CHAVE DA API DE FORMA SEGURA ---
   const rapidApiKey = process.env.RAPIDAPI_KEY;
 
-  // Verificação de segurança: Garante que a chave da API está configurada no servidor
+  // --- CORREÇÃO 2: VERIFICAR SE A CHAVE EXISTE ANTES DE USAR ---
   if (!rapidApiKey) {
-    console.error("ERRO CRÍTICO: A variável RAPIDAPI_KEY não foi encontrada nas variáveis de ambiente!");
-    return NextResponse.json({ success: false, error: "Erro de configuração no servidor" }, { status: 500 });
+    console.error("CRITICAL ERROR: RAPIDAPI_KEY not found in environment variables!");
+    return NextResponse.json(
+      { success: false, error: "Server configuration error" },
+      { status: 500 }
+    );
   }
-  
+
+  // Fallback padrão caso a API falhe
+  const fallbackPayload = {
+    success: true,
+    result: "https://i.postimg.cc/gcNd6QBM/img1.jpg",
+    is_photo_private: true,
+  }
+
   try {
-    const { phone } = await request.json();
+    const { phone, countryCode } = await request.json()
 
-    // Validação da requisição recebida do frontend
     if (!phone) {
-      return NextResponse.json({ success: false, error: "O número de telefone é obrigatório" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Phone number is required" },
+        { status: 400, headers: { "Access-Control-Allow-Origin": "*" } },
+      )
     }
-    const fullNumber = String(phone).replace(/[^0-9]/g, "");
-    if (fullNumber.length < 10) {
-      return NextResponse.json({ success: false, error: "Número de telefone inválido ou muito curto" }, { status: 400 });
+
+    const cleanNumber = phone.replace(/\D/g, "")
+    const cleanCountryCode = countryCode?.replace(/\D/g, "") || ""
+    const fullPhone = cleanCountryCode + cleanNumber
+
+    // Verifica cache
+    const cached = cache.get(fullPhone)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log("[v0] Returning cached WhatsApp photo")
+      return NextResponse.json(
+        { success: true, result: cached.result, is_photo_private: false },
+        { status: 200, headers: { "Access-Control-Allow-Origin": "*" } },
+      )
     }
-    
-    // Prepara e executa a chamada para a API externa
-    const url = `${API_ENDPOINT}?phone=${fullNumber}`;
-    const options = {
-      method: 'GET',
+
+    const apiUrl = `https://whatsapp-data1.p.rapidapi.com/number/${fullPhone}?base64=false&telegram=false&google=false`
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
-        'x-rapidapi-key': rapidApiKey,
-        'x-rapidapi-host': API_HOST,
+        // --- CORREÇÃO 3: USAR A VARIÁVEL SEGURA EM VEZ DA CHAVE HARDCODED ---
+        "X-RapidAPI-Key": rapidApiKey,
+        "X-RapidAPI-Host": "whatsapp-data1.p.rapidapi.com",
+        "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout?.(9_000), // Timeout de 25 segundos para evitar requisições presas
-    };
+      signal: AbortSignal.timeout?.(10_000),
+    })
 
-    const response = await fetch(url, options);
+    console.log("[v0] API Response status:", response.status)
 
-    // Lida com casos onde a API externa retorna um erro (ex: 401, 403, 500)
-    if (!response.ok) {
-      console.error(`A API externa (${API_HOST}) retornou um erro com status: ${response.status}`);
-      return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
+    // Tratamento de rate limit
+    if (response.status === 429) {
+      console.log("[v0] Rate limit exceeded, returning fallback")
+      return NextResponse.json(fallbackPayload, {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      })
     }
-    
-    // Lógica crucial: lê a resposta como texto, pois a API pode retornar uma URL ou uma mensagem de erro em texto puro
-    const responseBodyText = await response.text();
 
-    // Verifica se a resposta é uma URL de imagem utilizável
-    const isPhotoAvailable = responseBodyText && responseBodyText.startsWith('http');
+    // Verifica se a resposta foi bem-sucedida
+    if (!response.ok) {
+      console.error("[v0] Erro ao buscar foto:", response.status)
+      return NextResponse.json(fallbackPayload, {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      })
+    }
 
-    return NextResponse.json({ 
-      success: true,
-      result: isPhotoAvailable ? responseBodyText : FALLBACK_PHOTO_URL, 
-      is_photo_private: !isPhotoAvailable,
-    });
+    const responseText = await response.text()
+    console.log("[v0] API Response body:", responseText)
 
-  } catch (err: any) {
-    // Captura erros de rede, timeouts ou outras falhas inesperadas
-    console.error("Ocorreu um erro inesperado na rota da API:", err);
-    return NextResponse.json({ success: true, result: FALLBACK_PHOTO_URL, is_photo_private: true });
+    let photoUrl: string
+    try {
+      const jsonResponse = JSON.parse(responseText)
+      // Tenta várias chaves comuns para a URL da foto
+      photoUrl = jsonResponse.profilePic || jsonResponse.url || jsonResponse.result || jsonResponse.photo_url || jsonResponse.picture_url
+    } catch {
+      // Se não for JSON, trata como URL direta
+      photoUrl = responseText.trim()
+    }
+
+    // Valida se a resposta contém uma URL válida
+    if (!photoUrl || !photoUrl.startsWith("https://")) {
+      console.log("[v0] Invalid or empty response, returning fallback")
+      return NextResponse.json(fallbackPayload, {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      })
+    }
+
+    // Armazena no cache
+    cache.set(fullPhone, {
+      result: photoUrl.trim(),
+      timestamp: Date.now(),
+    })
+
+    // Limita o tamanho do cache
+    if (cache.size > 100) {
+      const oldestKey = Array.from(cache.entries()).sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0]
+      cache.delete(oldestKey)
+    }
+
+    // Retorna a URL da foto de perfil
+    return NextResponse.json(
+      {
+        success: true,
+        result: photoUrl.trim(),
+        is_photo_private: false,
+      },
+      {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      },
+    )
+  } catch (error) {
+    console.error("[v0] Erro na requisição:", error)
+    return NextResponse.json(fallbackPayload, {
+      status: 200,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    })
   }
 }
 
-// Função essencial para lidar com requisições de pre-flight (CORS)
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
@@ -75,5 +144,5 @@ export async function OPTIONS() {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
-  });
+  })
 }
