@@ -3,7 +3,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // Constantes de configuração da API para fácil manutenção
-const API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture";
+const API_ENDPOINT = "https://whatsapp-data.p.rapidapi.com/wspicture?phone=34605797754";
 const API_HOST = "whatsapp-data.p.rapidapi.com";
 const FALLBACK_PHOTO_URL = "https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWvh5S3vB6bkT0Qv8Vn8N5Ffseq84ClGI=";
 
